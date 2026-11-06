@@ -1,26 +1,28 @@
-import {
-  CANVAS_WIDTH,
-  CANVAS_HEIGHT,
-  TILE_SIZE,
-  GRID_COLS,
-  GRID_ROWS,
-  HUD_HEIGHT,
-} from '../config';
-import { Player } from '../entities/player';
+import type { TileType } from '../types';
+import type { Player } from '../entities/player';
+import type { Level } from '../level/level';
+import { CANVAS_WIDTH, TILE_SIZE, GRID_ROWS, HUD_HEIGHT } from '../config';
 
-const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE; // 520
+const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
-export function render(ctx: CanvasRenderingContext2D, player: Player): void {
+const TILE_COLORS: Record<TileType, string> = {
+  wall: '#7f8c8d',
+  snow: '#ecf0f1',
+  chest: '#f1c40f',
+  empty: '#2c3e50',
+};
+
+export function render(ctx: CanvasRenderingContext2D, level: Level, player: Player): void {
   // Background
   ctx.fillStyle = '#2c3e50';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
 
   // Visual cell grid
   // TODO: to be removed in final release
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
 
-  for (let col = 0; col <= GRID_COLS; col++) {
+  for (let col = 0; col <= level.cols; col++) {
     const x = col * TILE_SIZE + 0.5;
     ctx.beginPath();
     ctx.moveTo(x, 0);
@@ -28,7 +30,7 @@ export function render(ctx: CanvasRenderingContext2D, player: Player): void {
     ctx.stroke();
   }
 
-  for (let row = 0; row <= GRID_ROWS; row++) {
+  for (let row = 0; row <= level.rows; row++) {
     const y = row * TILE_SIZE + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -36,10 +38,19 @@ export function render(ctx: CanvasRenderingContext2D, player: Player): void {
     ctx.stroke();
   }
 
-  // HUD area
+  // Tiles
+  for (let row = 0; row < level.rows; row++) {
+    for (let col = 0; col < level.cols; col++) {
+      const tile = level.getCell(col, row);
+      if (tile === 'empty') continue;
+      ctx.fillStyle = TILE_COLORS[tile];
+      ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+  }
+
+  // HUD
   ctx.fillStyle = '#4a4a4a';
   ctx.fillRect(0, FIELD_HEIGHT, CANVAS_WIDTH, HUD_HEIGHT);
-
   ctx.strokeStyle = '#ecf0f1';
   ctx.lineWidth = 2;
   ctx.beginPath();

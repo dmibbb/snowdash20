@@ -3,9 +3,9 @@
 > Живой документ. Обновляется после каждой фазы.
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
-> **Последнее обновление:** 2026-10-28
-> **Текущая фаза:** 1 — Setup & Skeleton
-> **Следующая фаза:** 2 — Player on Empty Grid
+> **Последнее обновление:** 2026-11-06
+> **Текущая фаза:** 4 — Tiles Interactions
+> **Следующая фаза:** 5 — Stones
 
 ---
 
@@ -13,10 +13,10 @@
 
 | #   | Фаза                     | Статус         | Дата       |
 | --- | ------------------------ | -------------- | ---------- |
-| 1   | Setup & Skeleton         | ✅ Done        | 06/11/2026 |
-| 2   | Player on Empty Grid     | ✅ Done        | 06/11/2026 |
-| 3   | Level Loading & Walls    | 🔄 in progress |            |
-| 4   | Tiles Interactions       | ⏸ not started  |            |
+| 1   | Setup & Skeleton         | ✅ Done        | 2026-11-06 |
+| 2   | Player on Empty Grid     | ✅ Done        | 2026-11-06 |
+| 3   | Level Loading & Walls    | ✅ Done        | 2026-11-06 |
+| 4   | Tiles Interactions       | 🔄 in progress |            |
 | 5   | Stones                   | ⏸ not started  |            |
 | 6   | Monsters                 | ⏸ not started  |            |
 | 7   | Game State & Progression | ⏸ not started  |            |
@@ -35,21 +35,35 @@
 
 ```
 src/
-├── main.ts              — точка входа: canvas, загрузка уровня, rAF-цикл, вызовы tick()/render()
-├── config.ts            — все игровые константы
-├── types.ts             — Direction, GameMode, TileType, Point, CellCoords
-├── style.css            — центрирование canvas, 1:1, pixelated
+├── main.ts — точка входа: canvas, загрузка уровня, rAF-цикл, tick()/render()
+├── config.ts — все игровые константы
+├── types.ts — Direction, GameMode, TileType, Point, CellCoords
+├── style.css — центрирование canvas 1:1, image-rendering: pixelated
 ├── input/
-│   └── input.ts         — клавиатура: стрелки/WASD, preventDefault, сброс на blur
+│   └── input.ts — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
-│   └── player.ts        — класс Player: движение по клеткам, скорость 5 px/tick
+│   └── player.ts — класс Player: движение по клеткам, проверка стен через Level
+├── level/
+│   ├── parser.ts — parseLevel(text): ParsedLevel; валидация, срез BOM/пустых строк
+│   ├── parser.test.ts — 7 юнит-тестов (Vitest)
+│   └── level.ts — класс Level: сетка тайлов, getCell/setCell/isPassable
 └── render/
-    └── renderer.ts      — фон, сетка, HUD-полоса, игрок-плейсхолдер
+    └── renderer.ts — отрисовка: фон, сетка, тайлы (плейсхолдеры), HUD-полоса, игрок
 ```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
 
 Папки `assets/`, `audio/`, `level/`, `game/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
+
+## 2a. public/
+
+```
+public/
+└── levels/
+    └── level01.txt — первый уровень (13 строк × 20 символов)
+```
+
+Ассеты (спрайты, звук) — появятся в фазах 9–10. Пока используются плейсхолдеры.
 
 ---
 
@@ -62,8 +76,26 @@ src/
 
 ```
 // main.ts
-loadAssets(): Promise<void>
-mainLoop(): void — rAF-цикл с аккумулятором 50 мс
+loadLevelFile(path: string): Promise<string>
+-- fetch + проверка, что вернулся не index.html (защита от 404 → SPA fallback)
+
+main(): Promise<void>
+-- загружает /levels/level01.txt, парсит, создаёт Level и Player, запускает rAF
+```
+
+### Parser
+
+```
+// level/parser.ts
+interface ParsedLevel {
+  grid: TileType[][]
+  start: CellCoords
+  chestsCount: number
+}
+
+parseLevel(text: string): ParsedLevel
+-- валидирует 13×20, наличие ровно одной P, известные символы
+-- срезает BOM, \r, пустые строки
 ```
 
 ### Game
@@ -94,8 +126,10 @@ class Player {
   x, y: number
   state: 'idle' | 'moving'
   direction: Direction
+
   getCell(): CellCoords
   update(inputDir: Direction | null, level: Level): void
+  // private nextCell(): CellCoords
 }
 ```
 
@@ -104,17 +138,32 @@ class Player {
 ```
 // level/level.ts
 class Level {
-cols: number
-rows: number
-tileSize: number
+  readonly cols, rows, tileSize: number
+  readonly start: CellCoords
+  chestsCount: number
 
-getCell(col: number, row: number): GridCell
-setCell(col: number, row: number, cell: GridCell): void
-isPassable(col: number, row: number): boolean
+  getCell(col, row): TileType // вне границ → 'wall'
+  setCell(col, row, type): void // вне границ → no-op
+  isPassable(col, row): boolean // true кроме 'wall'
 }
 ```
 
-> ⚠️ Остальные интерфейсы (`Monster`, `Stone`, `InputState`, `Audio`, `Renderer`) — добавить, когда появятся в коде.
+### Renderer
+
+```
+// render/renderer.ts
+render(ctx: CanvasRenderingContext2D, level: Level, player: Player): void
+```
+
+### Input
+
+```
+// input/input.ts
+initInput(): void
+getDirection(): Direction | null // приоритет: up > down > left > right
+```
+
+> ⚠️ Остальные интерфейсы (`Monster`, `Stone`, `InputState`, `Audio`) — добавить, когда появятся в коде.
 
 ---
 
@@ -124,17 +173,18 @@ isPassable(col: number, row: number): boolean
 
 ### Placeholder-и (пока нет реальных PNG)
 
-- **Игрок:** синий квадрат 40×40 (`ctx.fillStyle = '#3498db'; ctx.fillRect(...)`). Временно.
-- **Стена:** серый квадрат `#7f8c8d`.
-- **Снег:** белый квадрат `#ecf0f1`.
-- **Сундук:** жёлтый квадрат `#f1c40f`.
-- **Камень:** тёмно-серый `#34495e`.
-- **Монстр:** красный квадрат `#e74c3c`.
-- **Фон поля:** однотонный `#2c3e50`, без сетки линий (просто пустое тёмное поле).
+- **Игрок:** `#3498db` (синий)
+- **Стена:** `#7f8c8d` (серый)
+- **Снег:** `#ecf0f1` (почти белый)
+- **Сундук:** `#f1c40f` (жёлтый)
+- **Камень:** `#34495e` (тёмно-серый)
+- **Монстр:** `#e74c3c` (красный)
+- **Фон поля:** `#2c3e50`
+- **HUD:** `#4a4a4a` + белая линия сверху
 
 ### UI
 
-- **Меню, Help, About, Game Over:** canvas-кнопки (рисуются через `ctx.fillRect` + текст через `ctx.fillText`), обработка кликов по координатам. НЕ HTML-элементы. Причина: единый стиль пиксель-арта.
+- Меню, Help, About, Game Over — **canvas-кнопки** (`ctx.fillRect` + текст), обработка кликов по координатам. НЕ HTML.
 
 ### Аудио
 
@@ -147,10 +197,23 @@ isPassable(col: number, row: number): boolean
 - **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
 - **Пауза** — в оригинале при Pause музыку/SFX приглушали; у нас — `audio.muted` на время паузы.
 
-### Прочее, обнаруженное при реализации
+### Скорости
 
-- **Canvas 1:1** — отображается ровно 800×600, без масштабирования. Адаптивность — в фазе 11, если понадобится.
-- **HUD в фазе 2** — серая полоса #4a4a4a + белая линия сверху, без цифр и иконок.
+- Пересчитаны под фиксированный тик 20 Hz (оригинал был на `Sleep(10)` с переменным dt).
+- `PLAYER_SPEED = 5`, `MONSTER_SPEED = 3`, `STONE_FALL_SPEED = 8`, `STONE_PUSH_SPEED = 5`.
+- Могут быть уточнены после плейтеста в фазе 5–6.
+
+### Парсер уровня
+
+- Пустые строки и `\r` отбрасываются — защита от copy-paste артефактов.
+- BOM срезается.
+- Если `fetch` вернул HTML (Vite SPA fallback при 404) — `main.ts` кидает понятную ошибку, а не пытается парсить HTML.
+- В случае ошибки парсер выводит все увиденные строки — упрощает диагностику «не то количество строк».
+
+### Canvas
+
+- Отображается 1:1 (800×600), без масштабирования.
+- Адаптивность — в фазе 11, если понадобится.
 
 ---
 
@@ -210,13 +273,16 @@ npm test — юнит-тесты (Vitest)
 
 > Уточнения по стилю, чтобы AI не «изобретал» на каждом шаге.
 
-- **Строгий TS** (`strict: true` в `tsconfig.json`).
-- **Классы**, не фабрики и не функциональный стиль. Объекты мутабельны (как в оригинале на C++).
+- **Строгий TS** (`strict: true`).
+- **`import type` для типов.** `verbatimModuleSyntax: true` — интерфейсы/типы (`Direction`, `TileType`, `CellCoords`, `ParsedLevel`) импортируются через `import type`. Классы, функции, константы — обычным `import`.
+- **Классы**, не фабрики и не функциональный стиль. Объекты мутабельны.
 - **Никаких сторонних библиотек** для игры. Только Vite, TS, Vitest, ESLint, Prettier.
 - **Именование:** `camelCase` для переменных/функций, `PascalCase` для классов/типов, `UPPER_SNAKE` для констант в `config.ts`.
 - **Единицы:** пиксели — целые числа, клетки — `col`/`row` (не `x`/`y`).
 - **Никаких `any`.** Если нужно — `unknown` + type guard.
-- **Импорты:** относительные, без алиасов (пока проект маленький). Но в проекте включён verbatimModuleSyntax: true — все импорты, которые используются только как типы (интерфейсы, type-алиасы, enum, Direction, GameMode, Point, CellCoords и т.п.), обязаны быть import type { X } from '...'. Обычный import — только для значений (классы, функции, константы).
+- **Импорты:** относительные, без алиасов.
+- **Комментарии в коде — на английском.** Русский — только в документации (`SPEC.md`, `PROJECT_CONTEXT.md`, коммиты).
+- **Процесс:** в конце каждой фазы сначала `npm run build` (зелёный), потом `npm test` (зелёный), потом `npm run dev` + чек-лист.
 
 ---
 

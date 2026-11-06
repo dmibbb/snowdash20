@@ -1,5 +1,6 @@
 import type { Direction, CellCoords } from '../types';
-import { TILE_SIZE, PLAYER_SPEED, GRID_COLS, GRID_ROWS } from '../config';
+import type { Level } from '../level/level';
+import { TILE_SIZE, PLAYER_SPEED } from '../config';
 
 export class Player {
   x: number;
@@ -24,14 +25,14 @@ export class Player {
     };
   }
 
-  update(inputDirection: Direction | null): void {
+  update(inputDirection: Direction | null, level: Level): void {
     if (this.state === 'idle') {
       if (inputDirection === null || inputDirection === 'stop') return;
 
       this.direction = inputDirection;
       const next = this.nextCell();
 
-      if (next.col < 0 || next.col >= GRID_COLS || next.row < 0 || next.row >= GRID_ROWS) {
+      if (!level.isPassable(next.col, next.row)) {
         return;
       }
 
