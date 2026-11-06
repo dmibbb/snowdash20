@@ -14,8 +14,8 @@
 | #   | Фаза                     | Статус         | Дата       |
 | --- | ------------------------ | -------------- | ---------- |
 | 1   | Setup & Skeleton         | ✅ Done        | 06/11/2026 |
-| 2   | Player on Empty Grid     | 🔄 in progress |            |
-| 3   | Level Loading & Walls    | ⏸ not started  |            |
+| 2   | Player on Empty Grid     | ✅ Done        | 06/11/2026 |
+| 3   | Level Loading & Walls    | 🔄 in progress |            |
 | 4   | Tiles Interactions       | ⏸ not started  |            |
 | 5   | Stones                   | ⏸ not started  |            |
 | 6   | Monsters                 | ⏸ not started  |            |
@@ -33,40 +33,23 @@
 
 > Заполняется по мере появления файлов. Показывает «что уже существует», чтобы AI не создавал дубликаты.
 
+```
 src/
-├── main.ts — точка входа: canvas, rAF-цикл с аккумулятором 50 мс, вызовы tick() и render()
-├── config.ts — все игровые константы (размеры, скорости, очки, жизни)
-├── types.ts — общие типы: Direction, GameMode, TileType, Point, CellCoords
-└── style.css — глобальные стили, центрирование canvas 800×600, image-rendering: pixelated
-├── assets/
-│ └── loader.ts —
-├── audio/
-│ └── audio.ts —
+├── main.ts              — точка входа: canvas, загрузка уровня, rAF-цикл, вызовы tick()/render()
+├── config.ts            — все игровые константы
+├── types.ts             — Direction, GameMode, TileType, Point, CellCoords
+├── style.css            — центрирование canvas, 1:1, pixelated
 ├── input/
-│ └── input.ts —
-├── level/
-│ ├── parser.ts —
-│ └── level.ts —
+│   └── input.ts         — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
-│ ├── player.ts —
-│ ├── monster.ts —
-│ ├── stone.ts —
-│ └── static.ts —
-├── render/
-│ ├── renderer.ts —
-│ └── hud.ts —
-├── game/
-│ ├── game.ts —
-│ └── tick.ts —
-└── modes/
-├── intro.ts —
-├── menu.ts —
-├── help.ts —
-└── gameover.ts —
+│   └── player.ts        — класс Player: движение по клеткам, скорость 5 px/tick
+└── render/
+    └── renderer.ts      — фон, сетка, HUD-полоса, игрок-плейсхолдер
+```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
 
-Папки `assets/`, `audio/`, `input/`, `level/`, `entities/`, `render/`, `game/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
+Папки `assets/`, `audio/`, `level/`, `game/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
 
 ---
 
@@ -77,12 +60,15 @@ src/
 
 ### Точка входа
 
+```
 // main.ts
 loadAssets(): Promise<void>
 mainLoop(): void — rAF-цикл с аккумулятором 50 мс
+```
 
 ### Game
 
+```
 // game/game.ts
 class Game {
 score: number
@@ -98,24 +84,24 @@ resetLevel(): void
 tick(input: InputState): void
 render(ctx: CanvasRenderingContext2D): void
 }
+```
 
 ### Player
 
+```
 // entities/player.ts
 class Player {
-x: number
-y: number
-state: 'idle' | 'moving'
-direction: Direction
-
-getCell(): { col: number, row: number }
-possibleDirection(level: Level, dir: Direction): boolean
-update(input: InputState, level: Level): void
-render(ctx: CanvasRenderingContext2D): void
+  x, y: number
+  state: 'idle' | 'moving'
+  direction: Direction
+  getCell(): CellCoords
+  update(inputDir: Direction | null, level: Level): void
 }
+```
 
 ### Level
 
+```
 // level/level.ts
 class Level {
 cols: number
@@ -126,6 +112,7 @@ getCell(col: number, row: number): GridCell
 setCell(col: number, row: number, cell: GridCell): void
 isPassable(col: number, row: number): boolean
 }
+```
 
 > ⚠️ Остальные интерфейсы (`Monster`, `Stone`, `InputState`, `Audio`, `Renderer`) — добавить, когда появятся в коде.
 
@@ -147,7 +134,6 @@ isPassable(col: number, row: number): boolean
 
 ### UI
 
-- Canvas отображается 1:1, адаптивность — в фазе 11, если понадобится
 - **Меню, Help, About, Game Over:** canvas-кнопки (рисуются через `ctx.fillRect` + текст через `ctx.fillText`), обработка кликов по координатам. НЕ HTML-элементы. Причина: единый стиль пиксель-арта.
 
 ### Аудио
@@ -160,6 +146,11 @@ isPassable(col: number, row: number): boolean
 
 - **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
 - **Пауза** — в оригинале при Pause музыку/SFX приглушали; у нас — `audio.muted` на время паузы.
+
+### Прочее, обнаруженное при реализации
+
+- **Canvas 1:1** — отображается ровно 800×600, без масштабирования. Адаптивность — в фазе 11, если понадобится.
+- **HUD в фазе 2** — серая полоса #4a4a4a + белая линия сверху, без цифр и иконок.
 
 ---
 
@@ -225,7 +216,7 @@ npm test — юнит-тесты (Vitest)
 - **Именование:** `camelCase` для переменных/функций, `PascalCase` для классов/типов, `UPPER_SNAKE` для констант в `config.ts`.
 - **Единицы:** пиксели — целые числа, клетки — `col`/`row` (не `x`/`y`).
 - **Никаких `any`.** Если нужно — `unknown` + type guard.
-- **Импорты:** относительные, без алиасов (пока проект маленький).
+- **Импорты:** относительные, без алиасов (пока проект маленький). Но в проекте включён verbatimModuleSyntax: true — все импорты, которые используются только как типы (интерфейсы, type-алиасы, enum, Direction, GameMode, Point, CellCoords и т.п.), обязаны быть import type { X } from '...'. Обычный import — только для значений (классы, функции, константы).
 
 ---
 

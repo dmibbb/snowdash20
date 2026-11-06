@@ -7,10 +7,10 @@ export const HUD_HEIGHT = 80;
 
 export const TICK_MS = 50;
 
-export const PLAYER_SPEED = 2;
-export const MONSTER_SPEED = 1;
-export const STONE_FALL_SPEED = 4;
-export const STONE_PUSH_SPEED = 2;
+export const PLAYER_SPEED = 5;
+export const MONSTER_SPEED = 3;
+export const STONE_FALL_SPEED = 8;
+export const STONE_PUSH_SPEED = 5;
 
 export const MAX_LIVES = 4;
 export const START_LIVES = 4;
