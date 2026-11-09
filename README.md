@@ -1,3 +1,3 @@
-# SnowDash: 20th Anniversary Remake
+# SnowDash: 20th Anniversary Edition
 
-Любимая игра SnowDash. Специальный web-ремейк на 20-летие самой топовой игры в мире!
+Любимая игра SnowDash. Специальный web-порт на 20-летие самой топовой игры в мире!

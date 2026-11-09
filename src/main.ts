@@ -5,6 +5,7 @@ import { initInput, getDirection } from './input/input';
 import { render } from './render/renderer';
 import { parseLevel } from './level/parser';
 import { Level } from './level/level';
+import { Game } from './game/game';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -40,11 +41,14 @@ async function main(): Promise<void> {
   const level = new Level(parsed);
   const player = new Player(parsed.start.col, parsed.start.row);
 
+  const game = new Game();
+  game.visibleChests = level.chestsCount;
+
   let lastTime = performance.now();
   let accumulator = 0;
 
   function tick(): void {
-    player.update(getDirection(), level);
+    player.update(getDirection(), level, game);
   }
 
   function loop(now: number): void {
@@ -57,7 +61,7 @@ async function main(): Promise<void> {
       accumulator -= TICK_MS;
     }
 
-    render(ctx, level, player);
+    render(ctx, level, player, game);
     requestAnimationFrame(loop);
   }
 

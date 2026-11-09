@@ -1,7 +1,8 @@
 import type { TileType } from '../types';
 import type { Player } from '../entities/player';
 import type { Level } from '../level/level';
-import { CANVAS_WIDTH, TILE_SIZE, GRID_ROWS, HUD_HEIGHT } from '../config';
+import type { Game } from '../game/game';
+import { CANVAS_WIDTH, TILE_SIZE, GRID_ROWS, HUD_HEIGHT, DEBUG_TILE_LABELS } from '../config';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -12,13 +13,35 @@ const TILE_COLORS: Record<TileType, string> = {
   empty: '#2c3e50',
 };
 
-export function render(ctx: CanvasRenderingContext2D, level: Level, player: Player): void {
+const TILE_LETTERS: Record<TileType, string> = {
+  wall: 'B',
+  snow: 'S',
+  chest: 'C',
+  empty: '',
+};
+
+function drawLabel(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: number): void {
+  ctx.font = 'bold 16px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#000';
+  ctx.fillStyle = '#fff';
+  ctx.strokeText(text, cx, cy);
+  ctx.fillText(text, cx, cy);
+}
+
+export function render(
+  ctx: CanvasRenderingContext2D,
+  level: Level,
+  player: Player,
+  game: Game,
+): void {
   // Background
   ctx.fillStyle = '#2c3e50';
   ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
 
-  // Visual cell grid
-  // TODO: to be removed in final release
+  // Visual cell grid — TODO: remove in final release
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
 
@@ -43,8 +66,16 @@ export function render(ctx: CanvasRenderingContext2D, level: Level, player: Play
     for (let col = 0; col < level.cols; col++) {
       const tile = level.getCell(col, row);
       if (tile === 'empty') continue;
+
       ctx.fillStyle = TILE_COLORS[tile];
       ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+      if (DEBUG_TILE_LABELS) {
+        const letter = TILE_LETTERS[tile];
+        if (letter) {
+          drawLabel(ctx, letter, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2);
+        }
+      }
     }
   }
 
@@ -58,7 +89,19 @@ export function render(ctx: CanvasRenderingContext2D, level: Level, player: Play
   ctx.lineTo(CANVAS_WIDTH, FIELD_HEIGHT + 1);
   ctx.stroke();
 
+  // HUD text — placeholder for phase 8 (real sprites)
+  ctx.fillStyle = '#ecf0f1';
+  ctx.font = '20px monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`Score: ${game.score}`, 20, FIELD_HEIGHT + HUD_HEIGHT / 2);
+  ctx.fillText(`Chests: ${game.visibleChests}`, CANVAS_WIDTH - 180, FIELD_HEIGHT + HUD_HEIGHT / 2);
+
   // Player
   ctx.fillStyle = '#3498db';
   ctx.fillRect(player.x, player.y, TILE_SIZE, TILE_SIZE);
+
+  if (DEBUG_TILE_LABELS) {
+    drawLabel(ctx, 'P', player.x + TILE_SIZE / 2, player.y + TILE_SIZE / 2);
+  }
 }

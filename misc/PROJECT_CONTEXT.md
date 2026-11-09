@@ -3,9 +3,9 @@
 > Живой документ. Обновляется после каждой фазы.
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
-> **Последнее обновление:** 2026-11-06
-> **Текущая фаза:** 4 — Tiles Interactions
-> **Следующая фаза:** 5 — Stones
+> **Последнее обновление:** 2026-11-09
+> **Текущая фаза:** 5 — Stones
+> **Следующая фаза:** 6 — Monsters
 
 ---
 
@@ -16,8 +16,8 @@
 | 1   | Setup & Skeleton         | ✅ Done        | 2026-11-06 |
 | 2   | Player on Empty Grid     | ✅ Done        | 2026-11-06 |
 | 3   | Level Loading & Walls    | ✅ Done        | 2026-11-06 |
-| 4   | Tiles Interactions       | 🔄 in progress |            |
-| 5   | Stones                   | ⏸ not started  |            |
+| 4   | Tiles Interactions       | ✅ Done        | 2026-11-09 |
+| 5   | Stones                   | 🔄 in progress |            |
 | 6   | Monsters                 | ⏸ not started  |            |
 | 7   | Game State & Progression | ⏸ not started  |            |
 | 8   | UI — HUD, Pause, Modes   | ⏸ not started  |            |
@@ -43,6 +43,8 @@ src/
 │   └── input.ts — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
 │   └── player.ts — класс Player: движение по клеткам, проверка стен через Level
+├── game/
+│   └── game.ts  — минимальный Game: score, visibleChests
 ├── level/
 │   ├── parser.ts — parseLevel(text): ParsedLevel; валидация, срез BOM/пустых строк
 │   ├── parser.test.ts — 7 юнит-тестов (Vitest)
@@ -53,7 +55,7 @@ src/
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
 
-Папки `assets/`, `audio/`, `level/`, `game/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
+Папки `assets/`, `audio/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
 
 ## 2a. public/
 
@@ -103,18 +105,9 @@ parseLevel(text: string): ParsedLevel
 ```
 // game/game.ts
 class Game {
-score: number
-lives: number
-levelIndex: number
-level: Level | null
-player: Player | null
-monsters: Monster[]
-stones: Stone[]
-
-loadLevel(index: number): void
-resetLevel(): void
-tick(input: InputState): void
-render(ctx: CanvasRenderingContext2D): void
+  score: number
+  visibleChests: number
+  // Lives, levelIndex, entities, loadLevel/resetLevel/tick/render — in phase 7.
 }
 ```
 
@@ -214,6 +207,13 @@ getDirection(): Direction | null // приоритет: up > down > left > right
 
 - Отображается 1:1 (800×600), без масштабирования.
 - Адаптивность — в фазе 11, если понадобится.
+
+### Прочее
+
+- Снег/сундук «съедаются» на каждом Idle-тике. Логика в Player.consumeCurrentTile(), вызывается из Player.update() при state === 'idle', до проверки ввода. Это соответствует поведению оригинала: PossibleDirection вызывается каждый Idle-тик, независимо от нажатой клавиши. Игрок наступил на клетку → на следующем тике снег/сундук уже исчез.
+- Debug-буквы на тайлах. DEBUG_TILE_LABELS = true в config.ts. Поверх каждого тайла рисуется буква из формата уровня (B/S/C/P), чтобы отличать тайлы при отладке. Отключить в фазе 8, когда появятся спрайты.
+- HUD — временный текст. В фазе 4 HUD показывает Score: и Chests: текстом через ctx.fillText (шрифт 20px monospace). В фазе 8 заменим на спрайтовые цифры.
+- ctx.textAlign — сбрасывается вручную. После drawLabel (где textAlign = 'center') HUD-текст явно ставит textAlign = 'left'. Иначе координаты HUD-текста уезжают.
 
 ---
 

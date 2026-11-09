@@ -1,6 +1,7 @@
 import type { Direction, CellCoords } from '../types';
 import type { Level } from '../level/level';
-import { TILE_SIZE, PLAYER_SPEED } from '../config';
+import type { Game } from '../game/game';
+import { TILE_SIZE, PLAYER_SPEED, CHEST_POINTS } from '../config';
 
 export class Player {
   x: number;
@@ -25,8 +26,12 @@ export class Player {
     };
   }
 
-  update(inputDirection: Direction | null, level: Level): void {
+  update(inputDirection: Direction | null, level: Level, game: Game): void {
     if (this.state === 'idle') {
+      // Consume snow/chest on current cell — every idle tick, regardless of input.
+      // Matches original PossibleDirection() side effect.
+      this.consumeCurrentTile(level, game);
+
       if (inputDirection === null || inputDirection === 'stop') return;
 
       this.direction = inputDirection;
@@ -56,6 +61,21 @@ export class Player {
       if (this.x === this.targetX && this.y === this.targetY) {
         this.state = 'idle';
       }
+    }
+  }
+
+  private consumeCurrentTile(level: Level, game: Game): void {
+    const cell = this.getCell();
+    const tile = level.getCell(cell.col, cell.row);
+
+    if (tile === 'snow') {
+      level.setCell(cell.col, cell.row, 'empty');
+      // TODO (phase 9): play "eat snow" SFX
+    } else if (tile === 'chest') {
+      level.setCell(cell.col, cell.row, 'empty');
+      game.score += CHEST_POINTS;
+      game.visibleChests -= 1;
+      // TODO (phase 9): play "eat chest" SFX
     }
   }
 
