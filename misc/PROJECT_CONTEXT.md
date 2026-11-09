@@ -4,8 +4,8 @@
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
 > **Последнее обновление:** 2026-11-09
-> **Текущая фаза:** 6 — Monsters
-> **Следующая фаза:** 7 — Game State & Progression
+> **Текущая фаза:** 7 — Game State & Progression
+> **Следующая фаза:** 8 — UI — HUD, Pause, Modes
 
 ---
 
@@ -18,8 +18,8 @@
 | 3   | Level Loading & Walls    | ✅ Done        | 2026-11-06 |
 | 4   | Tiles Interactions       | ✅ Done        | 2026-11-09 |
 | 5   | Stones                   | ✅ Done        | 2026-11-09 |
-| 6   | Monsters                 | 🔄 in progress |            |
-| 7   | Game State & Progression | ⏸ not started  |            |
+| 6   | Monsters                 | ✅ Done        | 2026-11-09 |
+| 7   | Game State & Progression | 🔄 in progress |            |
 | 8   | UI — HUD, Pause, Modes   | ⏸ not started  |            |
 | 9   | Sound                    | ⏸ not started  |            |
 | 10  | Real Assets              | ⏸ not started  |            |
@@ -42,10 +42,11 @@ src/
 ├── input/
 │   └── input.ts — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
-│   ├── stone.ts - класс Stone: перемещение камня, падение
-│   └── player.ts — класс Player: движение по клеткам, проверка стен через Level
+│   ├── player.ts  — класс Player: движение по клеткам, еда снега/сундуков, проверка камней/монстров впереди
+│   ├── stone.ts   — класс Stone: idle/falling/pushed, гравитация, скатывание, толкание
+│   └── monster.ts — класс Monster: случайное блуждание, killed-флаг, модель 1|2
 ├── game/
-│   └── game.ts  — минимальный Game: score, visibleChests
+│   └── game.ts    — минимальный Game: score, visibleChests, stones[], monsters[], onPlayerHit
 ├── level/
 │   ├── parser.ts — parseLevel(text): ParsedLevel; валидация, срез BOM/пустых строк
 │   ├── parser.test.ts — 7 юнит-тестов (Vitest)
@@ -90,14 +91,21 @@ main(): Promise<void>
 
 ```
 // level/parser.ts
+interface MonsterStart {
+  col: number
+  row: number
+  model: 1 | 2
+}
+
 interface ParsedLevel {
   grid: TileType[][]
   start: CellCoords
+  stoneStarts: CellCoords[]
+  monsterStarts: MonsterStart[]
   chestsCount: number
 }
 
 parseLevel(text: string): ParsedLevel
-stoneStarts
 ```
 
 ### Game
@@ -107,9 +115,11 @@ stoneStarts
 class Game {
   score: number
   visibleChests: number
-  stones[]
-  onPlayerHit
-  // Lives, levelIndex, entities, loadLevel/resetLevel/tick/render — in phase 7.
+  stones: Stone[]
+  monsters: Monster[]
+
+  onPlayerHit(player: Player, level: Level): void
+  // Lives, levelIndex, level switching, GameOver — in phase 7.
 }
 ```
 
@@ -123,8 +133,14 @@ class Player {
   direction: Direction
 
   getCell(): CellCoords
-  update(inputDir, level, game, stones)
-  // private nextCell(): CellCoords
+  resetToStart(): void
+  update(
+    inputDir: Direction | null,
+    level: Level,
+    game: Game,
+    stones: Stone[],
+    monsters: Monster[],
+  ): void
 }
 ```
 
@@ -147,7 +163,12 @@ class Level {
 
 ```
 // render/renderer.ts
-render(ctx, level, player, game)
+render(
+  ctx: CanvasRenderingContext2D,
+  level: Level,
+  player: Player,
+  game: Game,
+): void
 ```
 
 ### Input
@@ -162,18 +183,39 @@ getDirection(): Direction | null // приоритет: up > down > left > right
 
 ```
 // entities/stone.ts
-class Stone {
-  x, y: number;
-  state: StoneState;
-  private targetX, targetY: number;
-  private readonly startX, startY: number;
+type StoneState = 'idle' | 'falling' | 'pushed'
 
-tryPush()
-reset()
-update(level, stones, player)
+class Stone {
+  x, y: number
+  state: StoneState
+
+  getCell(): CellCoords
+  reset(): void
+  tryPush(direction: Direction, level: Level, stones: Stone[]): boolean
+  update(level: Level, stones: Stone[], player: Player | null): void
+}
 ```
 
-> ⚠️ Остальные интерфейсы (`Monster`, `InputState`, `Audio`) — добавить, когда появятся в коде.
+### Monster
+
+```
+// entities/monster.ts
+type MonsterModel = 1 | 2
+
+class Monster {
+  x, y: number
+  state: 'idle' | 'moving'
+  direction: Direction
+  readonly model: MonsterModel
+  killed: boolean
+
+  getCell(): CellCoords
+  reset(): void
+  update(level: Level, stones: Stone[], monsters: Monster[]): void
+}
+```
+
+> ⚠️ Остальные интерфейсы (`InputState`, `Audio`) — добавить, когда появятся в коде.
 
 ---
 
@@ -236,6 +278,28 @@ update(level, stones, player)
 - Толкание с follow
 - Level.reset() при смерти — восстанавливает тайлы, score сохраняется
 - pushed используется и для push игроком, и для rolling
+
+### Монстры и проходимость
+
+- Монстр ходит **только по клеткам `empty`**. Стены, **видимый снег, видимый сундук**, камни, другие монстры и край карты — все блокируют. Соответствует `Monster::PossibleDirection` в оригинале (`Snow` / `Chest` с `Visible()` → return false).
+- После того как игрок съел снег/сундук (клетка стала `empty`), монстр может пройти по этой клетке.
+- Монстр выбирает случайное доступное направление только при блокировке; иначе продолжает движение в текущем.
+
+### Игрок → Монстр
+
+- Если игрок пытается войти в клетку с живым монстром → `game.onPlayerHit` → рестарт уровня.
+- Если монстр наступает на игрока (AABB) → то же самое.
+- Поведение соответствует оригиналу (в оригинале игрок тоже умирал при попытке войти в клетку монстра — через AABB-проверку в следующем тике).
+
+### Камень ↔ Снег/Сундук (fix, важно)
+
+- Снег и сундук **держат камень** как опору: `Stone.isCellFree` использует `level.getCell() === 'empty'`, **не** `isPassable()`. Соответствует `Object::Empty() == !visible` в оригинале.
+- Когда игрок съедает снег/сундук → клетка становится `empty` → камень теряет опору и падает на игрока (если он под ним).
+
+### Монстры — цвет плейсхолдеров (debug)
+
+- Модель 1 (Амёба): `#e74c3c` (красный), буква `M`
+- Модель 2 (Спайкер): `#e67e22` (оранжевый), буква `U`
 
 ---
 

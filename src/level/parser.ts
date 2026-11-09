@@ -1,10 +1,18 @@
 import type { TileType, CellCoords } from '../types';
+import type { MonsterModel } from '../entities/monster';
 import { GRID_COLS, GRID_ROWS } from '../config';
+
+export interface MonsterStart {
+  col: number;
+  row: number;
+  model: MonsterModel;
+}
 
 export interface ParsedLevel {
   grid: TileType[][];
   start: CellCoords;
   stoneStarts: CellCoords[];
+  monsterStarts: MonsterStart[];
   chestsCount: number;
 }
 
@@ -27,6 +35,7 @@ export function parseLevel(text: string): ParsedLevel {
 
   const grid: TileType[][] = [];
   let start: CellCoords | null = null;
+  const monsterStarts: MonsterStart[] = [];
   const stoneStarts: CellCoords[] = [];
   let chestsCount = 0;
 
@@ -63,7 +72,7 @@ export function parseLevel(text: string): ParsedLevel {
           break;
         case 'M':
         case 'U':
-          // TODO (phase 6): parse monsters
+          monsterStarts.push({ col, row, model: ch === 'M' ? 1 : 2 });
           rowArr.push('empty');
           break;
         case '.':
@@ -80,5 +89,5 @@ export function parseLevel(text: string): ParsedLevel {
   }
 
   if (!start) throw new Error('No P marker found');
-  return { grid, start, stoneStarts, chestsCount };
+  return { grid, start, stoneStarts, monsterStarts, chestsCount };
 }

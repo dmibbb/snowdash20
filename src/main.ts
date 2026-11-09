@@ -1,5 +1,5 @@
 import './style.css';
-import { TICK_MS, TILE_SIZE } from './config';
+import { TICK_MS, TILE_SIZE, MONSTER1_POINTS, MONSTER2_POINTS } from './config';
 import { Player } from './entities/player';
 import { Stone } from './entities/stone';
 import { initInput, getDirection } from './input/input';
@@ -7,6 +7,7 @@ import { render } from './render/renderer';
 import { parseLevel } from './level/parser';
 import { Level } from './level/level';
 import { Game } from './game/game';
+import { Monster } from './entities/monster';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -49,12 +50,17 @@ async function main(): Promise<void> {
   const game = new Game();
   game.visibleChests = level.chestsCount;
   game.stones = parsed.stoneStarts.map((s) => new Stone(s.col, s.row));
+  game.monsters = parsed.monsterStarts.map((m) => new Monster(m.col, m.row, m.model));
 
   let lastTime = performance.now();
   let accumulator = 0;
 
   function tick(): void {
-    player.update(getDirection(), level, game, game.stones);
+    player.update(getDirection(), level, game, game.stones, game.monsters);
+
+    for (const m of game.monsters) {
+      m.update(level, game.stones, game.monsters);
+    }
 
     for (const s of game.stones) {
       s.update(level, game.stones, player);
@@ -65,7 +71,28 @@ async function main(): Promise<void> {
       if (s.state === 'idle') continue;
       if (overlaps(s, player)) {
         game.onPlayerHit(player, level);
-        break;
+        return;
+      }
+    }
+
+    // Monster → player collision (AABB overlap)
+    for (const m of game.monsters) {
+      if (m.killed) continue;
+      if (overlaps(m, player)) {
+        game.onPlayerHit(player, level);
+        return;
+      }
+    }
+
+    // Stone → monster collision (only when stone is falling or pushed)
+    for (const s of game.stones) {
+      if (s.state === 'idle') continue;
+      for (const m of game.monsters) {
+        if (m.killed) continue;
+        if (overlaps(s, m)) {
+          m.killed = true;
+          game.score += m.model === 1 ? MONSTER1_POINTS : MONSTER2_POINTS;
+        }
       }
     }
   }

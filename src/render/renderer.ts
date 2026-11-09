@@ -20,6 +20,16 @@ const TILE_LETTERS: Record<TileType, string> = {
   empty: '',
 };
 
+const MONSTER_COLORS: Record<number, string> = {
+  1: '#e74c3c', // Amoeba
+  2: '#e67e22', // Spiker
+};
+
+const MONSTER_LETTERS: Record<number, string> = {
+  1: 'M',
+  2: 'U',
+};
+
 function drawLabel(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -97,6 +107,23 @@ export function render(
         stone.x + TILE_SIZE / 2,
         stone.y + TILE_SIZE / 2,
         stone.state === 'idle' ? '#fff' : '#f39c12',
+      );
+    }
+  }
+
+  // Monsters
+  for (const monster of game.monsters) {
+    if (monster.killed) continue;
+
+    ctx.fillStyle = MONSTER_COLORS[monster.model];
+    ctx.fillRect(monster.x, monster.y, TILE_SIZE, TILE_SIZE);
+
+    if (DEBUG_TILE_LABELS) {
+      drawLabel(
+        ctx,
+        MONSTER_LETTERS[monster.model],
+        monster.x + TILE_SIZE / 2,
+        monster.y + TILE_SIZE / 2,
       );
     }
   }

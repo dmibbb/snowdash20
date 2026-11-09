@@ -79,4 +79,16 @@ describe('parseLevel', () => {
     expect(r.grid[3][4]).toBe('empty');
     expect(r.grid[3][7]).toBe('empty');
   });
+
+  it('collects monster starts', () => {
+    const lines = VALID_LEVEL.split('\n');
+    lines[3] = 'B...M..U...........B';
+    const r = parseLevel(lines.join('\n'));
+    expect(r.monsterStarts).toEqual([
+      { col: 4, row: 3, model: 1 },
+      { col: 7, row: 3, model: 2 },
+    ]);
+    expect(r.grid[3][4]).toBe('empty');
+    expect(r.grid[3][7]).toBe('empty');
+  });
 });

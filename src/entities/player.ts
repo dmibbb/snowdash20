@@ -2,6 +2,7 @@ import type { Direction, CellCoords } from '../types';
 import type { Level } from '../level/level';
 import type { Game } from '../game/game';
 import type { Stone } from './stone';
+import type { Monster } from './monster';
 import { TILE_SIZE, PLAYER_SPEED, CHEST_POINTS } from '../config';
 
 export class Player {
@@ -40,7 +41,13 @@ export class Player {
     };
   }
 
-  update(inputDirection: Direction | null, level: Level, game: Game, stones: Stone[]): void {
+  update(
+    inputDirection: Direction | null,
+    level: Level,
+    game: Game,
+    stones: Stone[],
+    monsters: Monster[],
+  ): void {
     if (this.state === 'idle') {
       // Consume snow/chest on current cell — every idle tick, regardless of input.
       this.consumeCurrentTile(level, game);
@@ -51,6 +58,13 @@ export class Player {
       const next = this.nextCell();
 
       if (!level.isPassable(next.col, next.row)) return;
+
+      // Walking into a living monster = death (SPEC 9)
+      const monster = this.findMonsterAt(monsters, next.col, next.row);
+      if (monster) {
+        game.onPlayerHit(this, level);
+        return;
+      }
 
       // Check for stone in target cell
       const stone = this.findStoneAt(stones, next.col, next.row);
@@ -101,6 +115,14 @@ export class Player {
     return stones.find((s) => {
       const sc = s.getCell();
       return sc.col === col && sc.row === row;
+    });
+  }
+
+  private findMonsterAt(monsters: Monster[], col: number, row: number): Monster | undefined {
+    return monsters.find((m) => {
+      if (m.killed) return false;
+      const mc = m.getCell();
+      return mc.col === col && mc.row === row;
     });
   }
 
