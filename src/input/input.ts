@@ -18,6 +18,7 @@ let pendingConfirm = false;
 let pendingPause = false;
 let pendingMute = false;
 let pendingClick: { x: number; y: number } | null = null;
+let mousePos: { x: number; y: number } | null = null;
 
 let canvasEl: HTMLCanvasElement | null = null;
 let logicalW = 800;
@@ -69,6 +70,21 @@ export function initInput(canvas: HTMLCanvasElement, w = 800, h = 600): void {
       y: (e.clientY - rect.top) * scaleY,
     };
   });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!canvasEl) return;
+    const rect = canvasEl.getBoundingClientRect();
+    const scaleX = logicalW / rect.width;
+    const scaleY = logicalH / rect.height;
+    mousePos = {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    mousePos = null;
+  });
 }
 
 export function getDirection(): Direction | null {
@@ -101,4 +117,8 @@ export function consumeClick(): { x: number; y: number } | null {
   const v = pendingClick;
   pendingClick = null;
   return v;
+}
+
+export function getMousePosition(): { x: number; y: number } | null {
+  return mousePos;
 }

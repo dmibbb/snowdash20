@@ -5,6 +5,7 @@ import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
 import { drawPauseOverlay } from './render/overlays';
+import { createMenu } from './modes/menu';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -64,7 +65,7 @@ async function main(): Promise<void> {
   machine.register('playing', {
     onEnter: () => {
       paused = false;
-      consumePause(); // drop any pending pause from a previous mode
+      consumePause();
     },
     onExit: () => {
       paused = false;
@@ -83,12 +84,11 @@ async function main(): Promise<void> {
     },
   });
 
-  // Intro — placeholder; press Enter to start
-  // (in 8.4 replaced with real Menu flow)
+  // Intro — placeholder; press Enter to go to Menu (8.6 will replace with animation)
   machine.register('intro', {
     tick: () => {
       if (consumeConfirm()) {
-        void startGame();
+        machine.setMode('menu');
       }
     },
     render: (c) => {
@@ -102,8 +102,19 @@ async function main(): Promise<void> {
     },
   });
 
+  machine.register(
+    'menu',
+    createMenu({
+      onStart: () => {
+        void startGame();
+      },
+      onHelp: () => {
+        machine.setMode('help');
+      },
+    }),
+  );
+
   // Empty modes — filled in later sub-phases (8.4 – 8.7)
-  machine.register('menu', {});
   machine.register('help', {});
   machine.register('gameover', {});
 

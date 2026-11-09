@@ -53,10 +53,14 @@ src/
 │   ├── parser.ts       — parseLevel(text): ParsedLevel
 │   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
 │   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
+├── modes/
+│   ├── menu.ts   — createMenu({onStart, onHelp}) → ModeHooks; 4 кнопки, About/Exit оверлеи
+│   └── help.ts   — (появится в 8.5)
 └── render/
     ├── renderer.ts — render(ctx, game)
     ├── hud.ts      — renderHud(ctx, game)
-    └── overlays.ts — drawPauseOverlay(ctx) (+ About/Exit в 8.4)
+    ├── overlays.ts — drawPauseOverlay, drawAboutOverlay, drawExitOverlay
+    └── button.ts   — ButtonRect, isPointInRect, drawButton
 ```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
@@ -252,6 +256,23 @@ consumeConfirm(): boolean              // edge: Enter/Space
 consumePause(): boolean                // edge: Esc/P
 consumeMute(): boolean                 // edge: M
 consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логических координатах (с учётом CSS-скейла)
+getMousePosition(): { x: number; y: number } | null   // continuous
+```
+
+### Button
+
+```
+// render/button.ts
+interface ButtonRect { x, y, w, h: number }
+isPointInRect(p, r): boolean
+drawButton(ctx, rect, label, hover, fontSize?): void
+```
+
+### Menu
+
+```
+// modes/menu.ts
+createMenu(callbacks: { onStart: () => void, onHelp: () => void }): ModeHooks
 ```
 
 ---
@@ -357,6 +378,7 @@ consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логи
 - **Intro** — полная анимация R/G/B/Team/Presents по координатам и скоростям оригинала. Скип по любой клавише/клику. Авто-переход ~3 сек (не 15, как в оригинале — сократили для UX).
 - **Ассеты меню пока нет** — в фазе 8 рисуем плейсхолдеры: фон-градиент, кнопки-текст в рамках, Help-текст через `ctx.fillText`. Замена на PNG (`IDB_START`, `IDB_ABOUT`, `IDB_HELP`, `IDB_EXIT`, зимний фон) — в фазе 10.
 - **DEBUG_TILE_LABELS** — оставляем `true` до фазы 10.
+- **Menu (8.4).** `createMenu` возвращает `ModeHooks`. Кнопки — плейсхолдеры (рамка + текст), в фазе 10 заменятся на PNG. Координаты: Let's Go! (60,505,140,65), About (240,505), Help! (420,505), Exit (600,505). Hover — жёлтая рамка. About и Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новая `Game`. Enter = Start (без модалки). Esc в Menu = Start (короткий путь).
 
 ---
 
