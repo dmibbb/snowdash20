@@ -1,12 +1,13 @@
 import './style.css';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
-import { initInput, getDirection, consumeConfirm, consumePause } from './input/input';
+import { initInput, getDirection, consumePause } from './input/input';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
 import { drawPauseOverlay } from './render/overlays';
 import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
+import { createIntro } from './modes/intro';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -85,23 +86,14 @@ async function main(): Promise<void> {
     },
   });
 
-  // Intro — placeholder; press Enter to go to Menu (8.6 will replace with animation)
-  machine.register('intro', {
-    tick: () => {
-      if (consumeConfirm()) {
+  machine.register(
+    'intro',
+    createIntro({
+      onDone: () => {
         machine.setMode('menu');
-      }
-    },
-    render: (c) => {
-      c.fillStyle = '#000';
-      c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      c.fillStyle = '#ecf0f1';
-      c.font = 'bold 24px monospace';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText('SNOWDASH — PRESS ENTER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-    },
-  });
+      },
+    }),
+  );
 
   machine.register(
     'menu',

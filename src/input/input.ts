@@ -17,6 +17,7 @@ const pressed = new Set<string>();
 let pendingConfirm = false;
 let pendingPause = false;
 let pendingMute = false;
+let pendingAnyKey = false;
 let pendingClick: { x: number; y: number } | null = null;
 let mousePos: { x: number; y: number } | null = null;
 
@@ -31,6 +32,7 @@ export function initInput(canvas: HTMLCanvasElement, w = 800, h = 600): void {
 
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
+    pendingAnyKey = true;
 
     if (gameKeys.has(e.code)) {
       e.preventDefault();
@@ -121,4 +123,10 @@ export function consumeClick(): { x: number; y: number } | null {
 
 export function getMousePosition(): { x: number; y: number } | null {
   return mousePos;
+}
+
+export function consumeAnyKey(): boolean {
+  const v = pendingAnyKey;
+  pendingAnyKey = false;
+  return v;
 }

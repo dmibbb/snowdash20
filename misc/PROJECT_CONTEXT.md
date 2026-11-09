@@ -257,6 +257,7 @@ consumePause(): boolean                // edge: Esc/P
 consumeMute(): boolean                 // edge: M
 consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логических координатах (с учётом CSS-скейла)
 getMousePosition(): { x: number; y: number } | null   // continuous
+consumeAnyKey(): boolean   // edge, любая клавиша
 ```
 
 ### Button
@@ -276,6 +277,9 @@ createMenu(callbacks: { onStart: () => void, onHelp: () => void }): ModeHooks
 
 // modes/help.ts
 createHelp(callbacks: { onBack: () => void }): ModeHooks
+
+// modes/intro.ts
+createIntro(callbacks: { onDone: () => void }): ModeHooks
 ```
 
 ---
@@ -383,6 +387,7 @@ createHelp(callbacks: { onBack: () => void }): ModeHooks
 - **DEBUG_TILE_LABELS** — оставляем `true` до фазы 10.
 - **Menu (8.4).** `createMenu` возвращает `ModeHooks`. Кнопки — плейсхолдеры (рамка + текст), в фазе 10 заменятся на PNG. Координаты: Let's Go! (60,505,140,65), About (240,505), Help! (420,505), Exit (600,505). Hover — жёлтая рамка. About и Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новая `Game`. Enter = Start (без модалки). Esc в Menu = Start (короткий путь).
 - **Help (8.5).** Отдельный GameMode. Фон — тёмный градиент (заглушка), заголовок «Help!» синим, 10 предложений оригинала с word-wrap, кнопка Main Menu внизу слева. Esc/Enter/клик по кнопке → Menu.
+- **Intro (8.6).** Полная анимация R/G/B/Team/Presents. Позиции и скорости в ELEMENTS_DEF. Скорости ×2 от оригинала (~7.7s vs 15.4s) — чтобы не ждать. Скип по любой клавише/клику через consumeAnyKey/consumeClick → сразу Menu. Авто-переход через 500мс после того, как все элементы встали. Известная мелочь: композиция слегка съехала влево (правим в фазе 10).
 
 ---
 
