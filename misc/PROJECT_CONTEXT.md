@@ -4,8 +4,8 @@
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
 > **Последнее обновление:** 2026-11-10
-> **Текущая фаза:** 8 — UI — HUD, Pause, Modes
-> **Следующая фаза:** 9 — Sound
+> **Текущая фаза:** 9 — Sound
+> **Следующая фаза:** 10 — Real Assets
 
 ---
 
@@ -20,8 +20,8 @@
 | 5   | Stones                   | ✅ Done        | 2026-11-09 |
 | 6   | Monsters                 | ✅ Done        | 2026-11-09 |
 | 7   | Game State & Progression | ✅ Done        | 2026-11-10 |
-| 8   | UI — HUD, Pause, Modes   | 🔄 in progress |            |
-| 9   | Sound                    | ⏸ not started  |            |
+| 8   | UI — HUD, Pause, Modes   | ✅ Done        | 2026-11-10 |
+| 9   | Sound                    | 🔄 in progress |            |
 | 10  | Real Assets              | ⏸ not started  |            |
 | 11  | Tests, Polish, Deploy    | ⏸ not started  |            |
 
@@ -35,37 +35,35 @@
 
 ```
 src/
-├── main.ts        — тонкая точка входа: загрузка level_list.txt, создание Game, RAF-цикл
+├── main.ts        — точка входа: loadLevelFile, ModeMachine, RAF-цикл
 ├── config.ts      — все игровые константы
 ├── types.ts       — Direction, GameMode, TileType, Point, CellCoords
 ├── style.css      — центрирование canvas 1:1, image-rendering: pixelated
 ├── input/
-│   └── input.ts   — клавиатура: стрелки/WASD, preventDefault, сброс на blur
+│   └── input.ts   — keyboard + mouse: continuous (getDirection, getMousePosition) и edge (consume*)
 ├── entities/
-│   ├── player.ts  — Player: движение, еда снега/сундуков, проверка камней/монстров
-│   ├── stone.ts   — Stone: idle/falling/pushed, гравитация, скатывание, толкание
-│   └── monster.ts — Monster: блуждание, killed-флаг, модель 1|2
+│   ├── player.ts  — Player
+│   ├── stone.ts   — Stone
+│   └── monster.ts — Monster
 ├── game/
-│   ├── game.ts         — Game: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
-│   ├── modeMachine.ts  — ModeMachine: FSM с register/setMode/tick/render, хуки onEnter/onExit
-│   └── rating.ts       — getRating(levelIndex): строка
+│   ├── game.ts         — Game: score, lives, levelIndex, сущности, isGameOver
+│   ├── modeMachine.ts  — ModeMachine: FSM режимов
+│   └── rating.ts       — getRating(levelIndex)
 ├── level/
-│   ├── parser.ts       — parseLevel(text): ParsedLevel
+│   ├── parser.ts       — parseLevel(text)
 │   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
-│   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
+│   └── level.ts        — Level: getCell/setCell/isPassable, reset
 ├── modes/
-│   ├── menu.ts   — createMenu({onStart, onHelp}) → ModeHooks; 4 кнопки, About/Exit оверлеи
-│   └── help.ts   — createHelp({onBack}}) → ModeHooks
+│   ├── intro.ts    — createIntro({onDone})
+│   ├── menu.ts     — createMenu({onStart, onHelp})
+│   ├── help.ts     — createHelp({onBack})
+│   └── gameover.ts — createGameOver({getGame, onBack})
 └── render/
-    ├── renderer.ts — render(ctx, game)
-    ├── hud.ts      — renderHud(ctx, game)
-    ├── overlays.ts — drawPauseOverlay, drawAboutOverlay, drawExitOverlay
-    └── button.ts   — ButtonRect, isPointInRect, drawButton
+    ├── renderer.ts  — render(ctx, game): сцена
+    ├── hud.ts       — renderHud(ctx, game)
+    ├── overlays.ts  — draw{Pause, About, Exit, GameOver}Overlay
+    └── button.ts    — ButtonRect, isPointInRect, drawButton
 ```
-
-`—` → краткое описание, что делает файл. Заполняется по мере появления.
-
-Папки `assets/`, `audio/`, `modes/` — **пока не существуют**, появятся в фазах 2–8.
 
 ## 2a. public/
 
@@ -243,7 +241,10 @@ render(ctx: CanvasRenderingContext2D, game: Game): void
 
 ```
 // render/overlays.ts
-drawPauseOverlay(ctx: CanvasRenderingContext2D): void
+drawPauseOverlay(ctx): void
+drawAboutOverlay(ctx): void
+drawExitOverlay(ctx): void
+drawGameOverOverlay(ctx, game): void
 ```
 
 ### Input
@@ -251,13 +252,13 @@ drawPauseOverlay(ctx: CanvasRenderingContext2D): void
 ```
 // input/input.ts
 initInput(canvas: HTMLCanvasElement, w?: number, h?: number): void
-getDirection(): Direction | null       // continuous (held keys)
-consumeConfirm(): boolean              // edge: Enter/Space
-consumePause(): boolean                // edge: Esc/P
-consumeMute(): boolean                 // edge: M
-consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логических координатах (с учётом CSS-скейла)
-getMousePosition(): { x: number; y: number } | null   // continuous
-consumeAnyKey(): boolean   // edge, любая клавиша
+getDirection(): Direction | null                       // continuous
+getMousePosition(): { x: number; y: number } | null    // continuous
+consumeConfirm(): boolean                              // edge: Enter/Space
+consumePause(): boolean                                // edge: Esc/P
+consumeMute(): boolean                                 // edge: M
+consumeAnyKey(): boolean                               // edge: любая клавиша (для Intro)
+consumeClick(): { x: number; y: number } | null        // edge: mousedown
 ```
 
 ### Button
@@ -269,17 +270,20 @@ isPointInRect(p, r): boolean
 drawButton(ctx, rect, label, hover, fontSize?): void
 ```
 
-### Menu
+### Modes
 
 ```
+// modes/intro.ts
+createIntro(callbacks: { onDone: () => void }): ModeHooks
+
 // modes/menu.ts
 createMenu(callbacks: { onStart: () => void, onHelp: () => void }): ModeHooks
 
 // modes/help.ts
 createHelp(callbacks: { onBack: () => void }): ModeHooks
 
-// modes/intro.ts
-createIntro(callbacks: { onDone: () => void }): ModeHooks
+// modes/gameover.ts
+createGameOver(callbacks: { getGame: () => Game | null, onBack: () => void }): ModeHooks
 ```
 
 ---
@@ -349,10 +353,15 @@ createIntro(callbacks: { onDone: () => void }): ModeHooks
 - **Reset vs Reload при смерти.** При `onPlayerHit` с `lives > 0` вызывается `resetLevel()` — та же сцена, все сущности на стартовых позициях, `Level.reset()` восстанавливает тайлы и `chestsCount`. Уровень НЕ перезагружается с диска. `score` сохраняется.
 - **HUD в фазе 7 — текстовый.** `Lives: N`, `Score: N`, `Level: N` через `ctx.fillText`. В фазе 8 заменяется на спрайтовые цифры/иконки.
 - **GameOver-оверлей.** При `isGameOver === true` поверх поля рисуется `rgba(0,0,0,0.75)` + `GAME OVER` + `Score: N` + `Rating: <getRating(levelIndex)>`.
-- **FSM (фаза 8.1).** `ModeMachine` в `game/modeMachine.ts` диспатчит `tick`/`render` по `currentMode` через зарегистрированные хуки. `main.ts` регистрирует все режимы, `machine.setMode('intro')` при старте. `Playing` содержит всю игровую логику; `Intro/Menu/Help/GameOver` — заглушки, заполнятся в 8.4–8.7.
-- **Input — edge-triggered.** `getDirection()` читает held keys (для движения). `consumeConfirm/Pause/Mute/Click` — edge-triggered: накапливают событие, отдают при вызове и сбрасывают. Режим сам решает, что делать с событием. `initInput` принимает canvas, чтобы нормировать клики через `getBoundingClientRect` (учёт CSS-скейла).
-- **Intro — временный shortcut (8.1).** Сейчас `Intro` — чёрный экран с «SNOWDASH — PRESS ENTER». Enter/Space → `startGame()` → `Playing`. В 8.6 заменим на полную анимацию R/G/B/Team/Presents + скип по любой клавише → `Menu`. В 8.4 между Intro и Playing появится Menu.
-- **Пауза.** Esc/P в `Playing` — `consumePause()` переключает флаг `paused`. `tick()` не вызывает `game.tick()` при `paused`. `onEnter` сбрасывает `pendingPause`, чтобы не «съесть» нажатие из предыдущего режима. Оверлей — `drawPauseOverlay`.
+- **FSM (8.1).** `ModeMachine` в `game/modeMachine.ts`. `main.ts` регистрирует все режимы (intro, menu, help, playing, gameover), `machine.setMode('intro')` при старте. `Playing` содержит всю игровую логику; остальные — `ModeHooks` с опциональными `tick`/`render`/`onEnter`/`onExit`.
+- **Input — continuous + edge-triggered.** `getDirection()` и `getMousePosition()` — continuous (читают текущее состояние). `consumeConfirm/Pause/Mute/Click/AnyKey` — edge: накапливают событие и сбрасывают при вызове. Нормировка кликов через `getBoundingClientRect`.
+- **HUD вынесен в `render/hud.ts` (8.2).** Визуально без изменений. В фазе 10 заменим текст на спрайты.
+- **Пауза (8.3).** Esc/P в `Playing` — toggle `paused`. `tick()` при `paused` не вызывает `game.tick()`. `onEnter` сбрасывает `pendingPause`, чтобы не «съесть» нажатие из предыдущего режима. Оверлей — `drawPauseOverlay`.
+- **Menu (8.4).** Кнопки-плейсхолдеры: рамка + monospace-текст. В фазе 10 — PNG, если найдётся комиксовый шрифт; иначе останется текст. Hover — жёлтая рамка и жёлтый текст. About/Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новый `Game` (score=0, lives=4, level=1). Enter в Menu = Start.
+- **Help (8.5).** Отдельный GameMode. Тёмный градиентный фон (плейсхолдер). Word-wrap длинного текста (10 предложений оригинала). Кнопка Main Menu → Menu. Esc/Enter → Menu.
+- **Intro (8.6).** Полная анимация R/G/B/Team/Presents. Скорости ×2 от оригинала (~7.7s vs 15.4s). Скип по любой клавише/клику (`consumeAnyKey`/`consumeClick`) → сразу Menu. Авто-переход через 500мс после того, как все элементы встали. Известная мелочь: композиция слегка съехала влево (правим в фазе 10). В фазе 8 — текст, в фазе 10 — PNG.
+- **GameOver (8.7).** Полноценный GameMode (не оверлей внутри Playing). При `game.isGameOver` в `Playing.tick` — `setMode('gameover')`. Оверлей: тёмный экран поля, «GAME OVER», счёт, рейтинг, кнопка Back to Menu. HUD внизу виден. Клик/Enter/Esc → Menu. `game` остаётся как есть; при следующем Start из Menu создаётся новый.
+- **Полный цикл:** `Intro (скип) → Menu → Playing → (GameOver | конец уровней) → GameOver → Menu → Playing → ...`. Замыкается без F5.
 
 ### Монстры и проходимость
 

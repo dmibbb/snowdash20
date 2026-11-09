@@ -8,6 +8,7 @@ import { drawPauseOverlay } from './render/overlays';
 import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
+import { createGameOver } from './modes/gameover';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -79,6 +80,9 @@ async function main(): Promise<void> {
       }
       if (paused) return;
       game?.tick(getDirection());
+      if (game?.isGameOver) {
+        machine.setMode('gameover');
+      }
     },
     render: (c) => {
       if (game) renderGame(c, game);
@@ -116,7 +120,15 @@ async function main(): Promise<void> {
     }),
   );
 
-  machine.register('gameover', {});
+  machine.register(
+    'gameover',
+    createGameOver({
+      getGame: () => game,
+      onBack: () => {
+        machine.setMode('menu');
+      },
+    }),
+  );
 
   machine.setMode('intro');
 

@@ -1,6 +1,5 @@
 import type { TileType } from '../types';
 import type { Game } from '../game/game';
-import { getRating } from '../game/rating';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, GRID_ROWS, DEBUG_TILE_LABELS } from '../config';
 import { renderHud } from './hud';
 
@@ -45,23 +44,6 @@ function drawLabel(
   ctx.fillStyle = color;
   ctx.strokeText(text, cx, cy);
   ctx.fillText(text, cx, cy);
-}
-
-function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  ctx.fillStyle = '#e74c3c';
-  ctx.font = 'bold 48px monospace';
-  ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 - 60);
-
-  ctx.fillStyle = '#ecf0f1';
-  ctx.font = '24px monospace';
-  ctx.fillText(`Score: ${game.score}`, CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 + 10);
-  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 + 50);
 }
 
 export function render(ctx: CanvasRenderingContext2D, game: Game): void {
@@ -150,9 +132,5 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
   ctx.fillRect(game.player.x, game.player.y, TILE_SIZE, TILE_SIZE);
   if (DEBUG_TILE_LABELS) {
     drawLabel(ctx, 'P', game.player.x + TILE_SIZE / 2, game.player.y + TILE_SIZE / 2);
-  }
-
-  if (game.isGameOver) {
-    drawGameOverOverlay(ctx, game);
   }
 }

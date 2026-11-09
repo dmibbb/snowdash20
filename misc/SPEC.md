@@ -33,7 +33,11 @@ SnowDash — 2D-игра с видом сверху на сетке. Игрок 
 Переходы:
 
 - Intro → Menu (по таймеру или вводу)
-- Menu → Playing (Start), Menu → Help (Help), Menu → выход (Exit)
+- Menu → Playing (Start, новая игра с нуля: score=0, lives=4, level=1)
+- Menu → Help (Help!)
+- Menu → About: модальный оверлей поверх Menu
+- Menu → Exit: модальный оверлей «Thanks for playing!» + звук 29 (Hero Die 4)
+- Playing → GameOver: полноценный GameMode (не оверлей), кнопка Back to Menu
 - Help → Menu (Back)
 - Playing → GameOver (0 жизней или все уровни пройдены)
 - GameOver → Menu
@@ -295,41 +299,43 @@ SnowDash — 2D-игра с видом сверху на сетке. Игрок 
 - Pause: по центру экрана надпись «PAUSE» (при нажатии Esc/P).
 - Game Over: при lives == 0 — оверлей «Game Over» + сообщение с рейтингом и счётом.
 
-### 12.1. Экраны меню (фаза 8)
+### 12.1. Экраны меню (готово в фазе 8)
 
-**Menu.** Кнопки в нижней части экрана, координаты адаптированы под 800×600 (в оригинале окно было 768×594):
+**Menu.** Координаты кнопок (800×600):
 
-- `Let's Go!` — x ≈ 150, y ≈ 520, w ≈ 130, h ≈ 60
-- `About` — x ≈ 300, y ≈ 520, w ≈ 130, h ≈ 60
-- `Help!` — x ≈ 450, y ≈ 520, w ≈ 130, h ≈ 60
-- `Exit` — x ≈ 600, y ≈ 520, w ≈ 130, h ≈ 60
+- Let's Go! — (60, 505, 140, 65)
+- About — (240, 505, 140, 65)
+- Help! — (420, 505, 140, 65)
+- Exit — (600, 505, 140, 65)
 
-**В фазе 8 — текст в рамках** (плейсхолдер). **В фазе 10 — PNG** (`IDB_START`, `IDB_ABOUT`, `IDB_HELP`, `IDB_EXIT` + маски).
+Hover — жёлтая рамка и жёлтый текст. В фазе 8 — плейсхолдер (рамка + текст monospace). В фазе 10 — PNG (`IDB_START`, `IDB_ABOUT`, `IDB_HELP`, `IDB_EXIT` + маски), если найдётся подходящий шрифт; иначе остаётся текст.
 
-**About — модальный оверлей** поверх Menu. Затемнение, рамка, текст:
+**About — модальный оверлей** поверх Menu (не отдельный режим). Текст:
+RGB Team / SnowDash v1.0 / ...2 Dash or not 2 Dash? / Created by RGB Team / (c) 2006. Закрывается кликом, Enter или Esc.
 
-```
-RGB Team
+**Help — отдельный GameMode.** Фон — тёмный градиент (плейсхолдер; в оригинале — ч/б картинка). Заголовок «Help!». 10 предложений текста с word-wrap (см. ниже). Кнопка Main Menu внизу слева. Esc/Enter/клик → Menu.
 
-SnowDash v1.0
-...2 Dash or not 2 Dash?
-
-Created by RGB Team
-
-(c) 2006
-```
-
-Кнопка OK закрывает оверлей.
-
-**Help — отдельный экран.** Текст (оригинал, англ.):
+Текст Help (оригинал, англ.):
 
 > Santa Claus has lost all his presents for children! You must collect all gifts with the help of snowball Mr. Snejok. All presents scattered on all vicinity around the Mr. Snejok's house. Your hero is able to break courses through snow to himself, forming after him an ice surface. Mr. Snejok can push ahead of himself huge snow boulders that help him on his way but only one! Be careful! There are spiteful monsters have penetrated on your territory. They will kill you on your meeting! Then your hero will lose all gifts and he should collect them again. There are huge boulders that can kill Mr. Snejok if they fall down. However you can kill dangerous monsters by pushing down huge boulders on them.
 
-Кнопка «Main Menu» внизу слева → Menu.
+**Exit — модальный оверлей.** «Thanks for playing!» + «See you in the next SnowDash» + [OK]. Окно не закрывается. Закрывается кликом/Enter/Esc.
 
-**Exit — модальный оверлей** «Thanks for playing!» с кнопкой OK. Окно не закрывается.
+**Intro — отдельный GameMode.** Полная анимация R/G/B/Team/Presents. Элементы выезжают с краёв к своим позициям:
 
-**Intro.** Анимация как в оригинале: R слева (с -480 px), G сверху (с -380 px), B справа (с 1100 px), Team снизу (с 1000 px), Presents справа налево (с 2300 px). Скорости 5/3/5/3/7 px/тик. Скип по любой клавише/клику. Авто-переход через ~3 секунды (не 15, как в оригинале — иначе пользователь заскучает).
+| Элемент                    | Start (x,y) | Target (x,y) | Скорость (px/tick) |
+| -------------------------- | ----------- | ------------ | ------------------ |
+| R (красный, 110px)         | -480, 40    | 200, 40      | 10                 |
+| G (зелёный, 110px)         | 323, -380   | 323, 40      | 6                  |
+| B (синий, 110px)           | 1100, 40    | 480, 40      | 10                 |
+| Team (белый, 72px)         | 275, 1000   | 275, 450     | 6                  |
+| Presents (оранжевый, 40px) | 2300, 300   | 150, 300     | 14                 |
+
+Скорости — **×2 от оригинала** (~7.7 сек вместо 15.4 сек), чтобы не заставлять ждать. Скип по **любой клавише или клику** → сразу Menu. Авто-переход через 500мс после того, как все элементы встали.
+
+В фазе 8 — текст (monospace, bold). В фазе 10 — PNG (`IDB_R`, `IDB_G`, `IDB_B`, `IDB_TEAM`, `IDB_PRESENTS` + маски), если найдём.
+
+**GameOver — отдельный GameMode.** При `game.isGameOver` в `Playing.tick` — `setMode('gameover')`. Оверлей: тёмный экран поля, «GAME OVER», счёт, рейтинг (по `levelIndex`). Кнопка **Back to Menu** по центру. HUD внизу остаётся видимым. Клик/Enter/Esc → Menu, `game` сбрасывается (при следующем Start — новый).
 
 ## 13. Звук
 
@@ -383,8 +389,14 @@ Mute: по клавише M — audio.muted = !audio.muted для всех.
 | Enter / любая  | Пропустить интро, подтвердить в меню |
 | Клик по кнопке | Действие кнопки                      |
 
-- Enter/Space, Esc/P, M, клики — **edge-triggered**. Режим сам решает, что делать с нажатием (в `Playing` Esc = пауза, в `Menu` Enter = Start). Реализация: `consumeConfirm/consumePause/consumeMute/consumeClick` в input.
+- Enter/Space, Esc/P, M, клики, **любая клавиша в Intro** — edge-triggered.
+  - В Menu: Enter = Start. Esc/P/Enter/клик в About/Exit = закрыть модалку.
+  - В Help: Esc/Enter/клик на Main Menu = назад.
+  - В Playing: Esc/P = пауза.
+  - В GameOver: Esc/Enter/клик на Back to Menu = в Menu.
+  - В Intro: любая клавиша/клик = скип в Menu.
 - Клики нормируются через `getBoundingClientRect` canvas → логические 800×600 (учёт CSS-скейла).
+- `getMousePosition()` — continuous, для hover.
 
 Важно:
 
@@ -533,11 +545,21 @@ entities/
     monster.ts — монстр (модель 1|2)
     stone.ts — камень (idle/falling/pushed)
 render/
-    renderer.ts — отрисовка сцены, HUD-полосы, GameOver-оверлея
+    renderer.ts  — render(ctx, game): сцена (тайлы, камни, монстры, игрок)
+    hud.ts       — renderHud(ctx, game): HUD-полоса
+    overlays.ts  — drawPauseOverlay, drawAboutOverlay, drawExitOverlay, drawGameOverOverlay
+    button.ts    — ButtonRect, isPointInRect, drawButton (плейсхолдеры)
 game/
-    game.ts — состояние игры: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
-    modeMachine.ts — FSM режимов
-    rating.ts — getRating(levelIndex) → строка
+    game.ts        — состояние игры
+    modeMachine.ts — FSM с register/setMode/tick/render + onEnter/onExit
+    rating.ts
+modes/
+    intro.ts    — createIntro({onDone})
+    menu.ts     — createMenu({onStart, onHelp})
+    help.ts     — createHelp({onBack})
+    gameover.ts — createGameOver({getGame, onBack})
+input/
+    input.ts — keyboard + mouse; continuous (getDirection, getMousePosition) и edge (consume*)
 ```
 
 level/, entities/, game/tick.ts — чистая логика, без DOM. Тестируется Vitest в Node. render/, audio/, input/, modes/ — браузерный слой.
@@ -608,6 +630,9 @@ level/, entities/, game/tick.ts — чистая логика, без DOM. Те�
 - npm run build собирается без ошибок, npm run preview показывает рабочую игру.
 - Юнит-тесты логики (раздел 18) зелёные.
 - Игра не падает через 30–40 секунд (утечка DC из оригинала не воспроизводится — по определению).
+- Полный цикл Menu → Playing → (GameOver или конец уровней) → Menu → Playing замыкается без F5.
+- About/Exit — модальные оверлеи, закрываются кликом/Enter/Esc.
+- Intro пропускается любой клавишей/кликом.
 
 ## 22. Ассеты — что нужно конвертировать из оригинала
 

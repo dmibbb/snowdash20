@@ -1,4 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_ROWS, TILE_SIZE } from '../config';
+import type { Game } from '../game/game';
+import { getRating } from '../game/rating';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -101,4 +103,25 @@ export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
   ctx.fillStyle = 'rgba(236, 240, 241, 0.7)';
   ctx.font = '16px monospace';
   ctx.fillText('[ OK — click or press Enter ]', cx, cy + 90);
+}
+
+export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
+  // Field-only dim (HUD stays visible — we're a full mode, not overlay)
+  const fieldHeight = GRID_ROWS * TILE_SIZE;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, fieldHeight);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const cx = CANVAS_WIDTH / 2;
+  const cy = fieldHeight / 2;
+
+  ctx.fillStyle = '#e74c3c';
+  ctx.font = 'bold 64px monospace';
+  ctx.fillText('GAME OVER', cx, cy - 80);
+
+  ctx.fillStyle = '#ecf0f1';
+  ctx.font = '28px monospace';
+  ctx.fillText(`Score: ${game.score}`, cx, cy);
+  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, cy + 50);
 }
