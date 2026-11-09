@@ -1,9 +1,10 @@
 import './style.css';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
-import { initInput, getDirection, consumeConfirm } from './input/input';
+import { initInput, getDirection, consumeConfirm, consumePause } from './input/input';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
+import { drawPauseOverlay } from './render/overlays';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -58,13 +59,27 @@ async function main(): Promise<void> {
     }
   }
 
-  // Playing — real game
+  let paused = false;
+
   machine.register('playing', {
+    onEnter: () => {
+      paused = false;
+      consumePause(); // drop any pending pause from a previous mode
+    },
+    onExit: () => {
+      paused = false;
+    },
     tick: () => {
+      if (consumePause()) {
+        paused = !paused;
+        return;
+      }
+      if (paused) return;
       game?.tick(getDirection());
     },
     render: (c) => {
       if (game) renderGame(c, game);
+      if (paused) drawPauseOverlay(c);
     },
   });
 

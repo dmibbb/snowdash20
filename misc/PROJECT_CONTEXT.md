@@ -54,8 +54,9 @@ src/
 │   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
 │   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
 └── render/
-    ├── renderer.ts — render(ctx, game): сцена + GameOver-оверлей
-    └── hud.ts      — renderHud(ctx, game): HUD-полоса
+    ├── renderer.ts — render(ctx, game)
+    ├── hud.ts      — renderHud(ctx, game)
+    └── overlays.ts — drawPauseOverlay(ctx) (+ About/Exit в 8.4)
 ```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
@@ -234,6 +235,13 @@ class Monster {
 render(ctx: CanvasRenderingContext2D, game: Game): void
 ```
 
+### Overlays
+
+```
+// render/overlays.ts
+drawPauseOverlay(ctx: CanvasRenderingContext2D): void
+```
+
 ### Input
 
 ```
@@ -316,6 +324,7 @@ consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логи
 - **FSM (фаза 8.1).** `ModeMachine` в `game/modeMachine.ts` диспатчит `tick`/`render` по `currentMode` через зарегистрированные хуки. `main.ts` регистрирует все режимы, `machine.setMode('intro')` при старте. `Playing` содержит всю игровую логику; `Intro/Menu/Help/GameOver` — заглушки, заполнятся в 8.4–8.7.
 - **Input — edge-triggered.** `getDirection()` читает held keys (для движения). `consumeConfirm/Pause/Mute/Click` — edge-triggered: накапливают событие, отдают при вызове и сбрасывают. Режим сам решает, что делать с событием. `initInput` принимает canvas, чтобы нормировать клики через `getBoundingClientRect` (учёт CSS-скейла).
 - **Intro — временный shortcut (8.1).** Сейчас `Intro` — чёрный экран с «SNOWDASH — PRESS ENTER». Enter/Space → `startGame()` → `Playing`. В 8.6 заменим на полную анимацию R/G/B/Team/Presents + скип по любой клавише → `Menu`. В 8.4 между Intro и Playing появится Menu.
+- **Пауза.** Esc/P в `Playing` — `consumePause()` переключает флаг `paused`. `tick()` не вызывает `game.tick()` при `paused`. `onEnter` сбрасывает `pendingPause`, чтобы не «съесть» нажатие из предыдущего режима. Оверлей — `drawPauseOverlay`.
 
 ### Монстры и проходимость
 
