@@ -6,6 +6,7 @@ import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
 import { drawPauseOverlay } from './render/overlays';
 import { createMenu } from './modes/menu';
+import { createHelp } from './modes/help';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -114,8 +115,15 @@ async function main(): Promise<void> {
     }),
   );
 
-  // Empty modes — filled in later sub-phases (8.4 – 8.7)
-  machine.register('help', {});
+  machine.register(
+    'help',
+    createHelp({
+      onBack: () => {
+        machine.setMode('menu');
+      },
+    }),
+  );
+
   machine.register('gameover', {});
 
   machine.setMode('intro');

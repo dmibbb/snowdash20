@@ -55,7 +55,7 @@ src/
 │   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
 ├── modes/
 │   ├── menu.ts   — createMenu({onStart, onHelp}) → ModeHooks; 4 кнопки, About/Exit оверлеи
-│   └── help.ts   — (появится в 8.5)
+│   └── help.ts   — createHelp({onBack}}) → ModeHooks
 └── render/
     ├── renderer.ts — render(ctx, game)
     ├── hud.ts      — renderHud(ctx, game)
@@ -273,6 +273,9 @@ drawButton(ctx, rect, label, hover, fontSize?): void
 ```
 // modes/menu.ts
 createMenu(callbacks: { onStart: () => void, onHelp: () => void }): ModeHooks
+
+// modes/help.ts
+createHelp(callbacks: { onBack: () => void }): ModeHooks
 ```
 
 ---
@@ -379,6 +382,7 @@ createMenu(callbacks: { onStart: () => void, onHelp: () => void }): ModeHooks
 - **Ассеты меню пока нет** — в фазе 8 рисуем плейсхолдеры: фон-градиент, кнопки-текст в рамках, Help-текст через `ctx.fillText`. Замена на PNG (`IDB_START`, `IDB_ABOUT`, `IDB_HELP`, `IDB_EXIT`, зимний фон) — в фазе 10.
 - **DEBUG_TILE_LABELS** — оставляем `true` до фазы 10.
 - **Menu (8.4).** `createMenu` возвращает `ModeHooks`. Кнопки — плейсхолдеры (рамка + текст), в фазе 10 заменятся на PNG. Координаты: Let's Go! (60,505,140,65), About (240,505), Help! (420,505), Exit (600,505). Hover — жёлтая рамка. About и Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новая `Game`. Enter = Start (без модалки). Esc в Menu = Start (короткий путь).
+- **Help (8.5).** Отдельный GameMode. Фон — тёмный градиент (заглушка), заголовок «Help!» синим, 10 предложений оригинала с word-wrap, кнопка Main Menu внизу слева. Esc/Enter/клик по кнопке → Menu.
 
 ---
 
