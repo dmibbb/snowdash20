@@ -4,8 +4,8 @@
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
 > **Последнее обновление:** 2026-11-09
-> **Текущая фаза:** 5 — Stones
-> **Следующая фаза:** 6 — Monsters
+> **Текущая фаза:** 6 — Monsters
+> **Следующая фаза:** 7 — Game State & Progression
 
 ---
 
@@ -17,8 +17,8 @@
 | 2   | Player on Empty Grid     | ✅ Done        | 2026-11-06 |
 | 3   | Level Loading & Walls    | ✅ Done        | 2026-11-06 |
 | 4   | Tiles Interactions       | ✅ Done        | 2026-11-09 |
-| 5   | Stones                   | 🔄 in progress |            |
-| 6   | Monsters                 | ⏸ not started  |            |
+| 5   | Stones                   | ✅ Done        | 2026-11-09 |
+| 6   | Monsters                 | 🔄 in progress |            |
 | 7   | Game State & Progression | ⏸ not started  |            |
 | 8   | UI — HUD, Pause, Modes   | ⏸ not started  |            |
 | 9   | Sound                    | ⏸ not started  |            |
@@ -42,6 +42,7 @@ src/
 ├── input/
 │   └── input.ts — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
+│   ├── stone.ts - класс Stone: перемещение камня, падение
 │   └── player.ts — класс Player: движение по клеткам, проверка стен через Level
 ├── game/
 │   └── game.ts  — минимальный Game: score, visibleChests
@@ -96,8 +97,7 @@ interface ParsedLevel {
 }
 
 parseLevel(text: string): ParsedLevel
--- валидирует 13×20, наличие ровно одной P, известные символы
--- срезает BOM, \r, пустые строки
+stoneStarts
 ```
 
 ### Game
@@ -107,6 +107,8 @@ parseLevel(text: string): ParsedLevel
 class Game {
   score: number
   visibleChests: number
+  stones[]
+  onPlayerHit
   // Lives, levelIndex, entities, loadLevel/resetLevel/tick/render — in phase 7.
 }
 ```
@@ -121,7 +123,7 @@ class Player {
   direction: Direction
 
   getCell(): CellCoords
-  update(inputDir: Direction | null, level: Level): void
+  update(inputDir, level, game, stones)
   // private nextCell(): CellCoords
 }
 ```
@@ -145,7 +147,7 @@ class Level {
 
 ```
 // render/renderer.ts
-render(ctx: CanvasRenderingContext2D, level: Level, player: Player): void
+render(ctx, level, player, game)
 ```
 
 ### Input
@@ -156,7 +158,22 @@ initInput(): void
 getDirection(): Direction | null // приоритет: up > down > left > right
 ```
 
-> ⚠️ Остальные интерфейсы (`Monster`, `Stone`, `InputState`, `Audio`) — добавить, когда появятся в коде.
+### Stone
+
+```
+// entities/stone.ts
+class Stone {
+  x, y: number;
+  state: StoneState;
+  private targetX, targetY: number;
+  private readonly startX, startY: number;
+
+tryPush()
+reset()
+update(level, stones, player)
+```
+
+> ⚠️ Остальные интерфейсы (`Monster`, `InputState`, `Audio`) — добавить, когда появятся в коде.
 
 ---
 
@@ -214,6 +231,11 @@ getDirection(): Direction | null // приоритет: up > down > left > right
 - Debug-буквы на тайлах. DEBUG_TILE_LABELS = true в config.ts. Поверх каждого тайла рисуется буква из формата уровня (B/S/C/P), чтобы отличать тайлы при отладке. Отключить в фазе 8, когда появятся спрайты.
 - HUD — временный текст. В фазе 4 HUD показывает Score: и Chests: текстом через ctx.fillText (шрифт 20px monospace). В фазе 8 заменим на спрайтовые цифры.
 - ctx.textAlign — сбрасывается вручную. После drawLabel (где textAlign = 'center') HUD-текст явно ставит textAlign = 'left'. Иначе координаты HUD-текста уезжают.
+- Снег/сундук держат камень (фикс из фазы 5)
+- Скатывание только с камня + проверки hasStoneAt/игрок.
+- Толкание с follow
+- Level.reset() при смерти — восстанавливает тайлы, score сохраняется
+- pushed используется и для push игроком, и для rolling
 
 ---
 

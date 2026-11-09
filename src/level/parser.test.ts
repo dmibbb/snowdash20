@@ -67,4 +67,16 @@ describe('parseLevel', () => {
     lines[1] = 'B' + '.'.repeat(20) + 'B'; // 22 chars
     expect(() => parseLevel(lines.join('\n'))).toThrow(/too long/);
   });
+
+  it('collects stone starts', () => {
+    const lines = VALID_LEVEL.split('\n');
+    lines[3] = 'B...K..K...........B';
+    const r = parseLevel(lines.join('\n'));
+    expect(r.stoneStarts).toEqual([
+      { col: 4, row: 3 },
+      { col: 7, row: 3 },
+    ]);
+    expect(r.grid[3][4]).toBe('empty');
+    expect(r.grid[3][7]).toBe('empty');
+  });
 });

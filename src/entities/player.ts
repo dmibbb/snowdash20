@@ -1,6 +1,7 @@
 import type { Direction, CellCoords } from '../types';
 import type { Level } from '../level/level';
 import type { Game } from '../game/game';
+import type { Stone } from './stone';
 import { TILE_SIZE, PLAYER_SPEED, CHEST_POINTS } from '../config';
 
 export class Player {
@@ -9,14 +10,27 @@ export class Player {
   state: 'idle' | 'moving' = 'idle';
   direction: Direction = 'down';
 
+  private readonly startCol: number;
+  private readonly startRow: number;
   private targetX: number;
   private targetY: number;
 
   constructor(col: number, row: number) {
+    this.startCol = col;
+    this.startRow = row;
     this.x = col * TILE_SIZE;
     this.y = row * TILE_SIZE;
     this.targetX = this.x;
     this.targetY = this.y;
+  }
+
+  resetToStart(): void {
+    this.x = this.startCol * TILE_SIZE;
+    this.y = this.startRow * TILE_SIZE;
+    this.targetX = this.x;
+    this.targetY = this.y;
+    this.state = 'idle';
+    this.direction = 'down';
   }
 
   getCell(): CellCoords {
@@ -26,10 +40,9 @@ export class Player {
     };
   }
 
-  update(inputDirection: Direction | null, level: Level, game: Game): void {
+  update(inputDirection: Direction | null, level: Level, game: Game, stones: Stone[]): void {
     if (this.state === 'idle') {
       // Consume snow/chest on current cell — every idle tick, regardless of input.
-      // Matches original PossibleDirection() side effect.
       this.consumeCurrentTile(level, game);
 
       if (inputDirection === null || inputDirection === 'stop') return;
@@ -37,8 +50,15 @@ export class Player {
       this.direction = inputDirection;
       const next = this.nextCell();
 
-      if (!level.isPassable(next.col, next.row)) {
-        return;
+      if (!level.isPassable(next.col, next.row)) return;
+
+      // Check for stone in target cell
+      const stone = this.findStoneAt(stones, next.col, next.row);
+      if (stone && stone.state === 'idle') {
+        // Try to push; if push fails, player is blocked.
+        const pushed = stone.tryPush(this.direction, level, stones);
+        if (!pushed) return;
+        // If push succeeded, stone is now 'pushed' — fall through and let player move too.
       }
 
       this.targetX = next.col * TILE_SIZE;
@@ -70,13 +90,18 @@ export class Player {
 
     if (tile === 'snow') {
       level.setCell(cell.col, cell.row, 'empty');
-      // TODO (phase 9): play "eat snow" SFX
     } else if (tile === 'chest') {
       level.setCell(cell.col, cell.row, 'empty');
       game.score += CHEST_POINTS;
       game.visibleChests -= 1;
-      // TODO (phase 9): play "eat chest" SFX
     }
+  }
+
+  private findStoneAt(stones: Stone[], col: number, row: number): Stone | undefined {
+    return stones.find((s) => {
+      const sc = s.getCell();
+      return sc.col === col && sc.row === row;
+    });
   }
 
   private nextCell(): CellCoords {

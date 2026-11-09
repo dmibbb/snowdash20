@@ -20,13 +20,19 @@ const TILE_LETTERS: Record<TileType, string> = {
   empty: '',
 };
 
-function drawLabel(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: number): void {
+function drawLabel(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  cx: number,
+  cy: number,
+  color = '#fff',
+): void {
   ctx.font = 'bold 16px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineWidth = 3;
   ctx.strokeStyle = '#000';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = color;
   ctx.strokeText(text, cx, cy);
   ctx.fillText(text, cx, cy);
 }
@@ -76,6 +82,22 @@ export function render(
           drawLabel(ctx, letter, col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2);
         }
       }
+    }
+  }
+
+  // Stones
+  for (const stone of game.stones) {
+    ctx.fillStyle = '#34495e';
+    ctx.fillRect(stone.x, stone.y, TILE_SIZE, TILE_SIZE);
+
+    if (DEBUG_TILE_LABELS) {
+      drawLabel(
+        ctx,
+        'K',
+        stone.x + TILE_SIZE / 2,
+        stone.y + TILE_SIZE / 2,
+        stone.state === 'idle' ? '#fff' : '#f39c12',
+      );
     }
   }
 

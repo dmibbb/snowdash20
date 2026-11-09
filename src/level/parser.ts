@@ -4,6 +4,7 @@ import { GRID_COLS, GRID_ROWS } from '../config';
 export interface ParsedLevel {
   grid: TileType[][];
   start: CellCoords;
+  stoneStarts: CellCoords[];
   chestsCount: number;
 }
 
@@ -26,6 +27,7 @@ export function parseLevel(text: string): ParsedLevel {
 
   const grid: TileType[][] = [];
   let start: CellCoords | null = null;
+  const stoneStarts: CellCoords[] = [];
   let chestsCount = 0;
 
   for (let row = 0; row < GRID_ROWS; row++) {
@@ -50,6 +52,10 @@ export function parseLevel(text: string): ParsedLevel {
           rowArr.push('chest');
           chestsCount++;
           break;
+        case 'K':
+          stoneStarts.push({ col, row });
+          rowArr.push('empty');
+          break;
         case 'P':
           if (start) throw new Error('Multiple P markers');
           start = { col, row };
@@ -57,7 +63,7 @@ export function parseLevel(text: string): ParsedLevel {
           break;
         case 'M':
         case 'U':
-        case 'K':
+          // TODO (phase 6): parse monsters
           rowArr.push('empty');
           break;
         case '.':
@@ -74,5 +80,5 @@ export function parseLevel(text: string): ParsedLevel {
   }
 
   if (!start) throw new Error('No P marker found');
-  return { grid, start, chestsCount };
+  return { grid, start, stoneStarts, chestsCount };
 }

@@ -10,13 +10,22 @@ export class Level {
   chestsCount: number;
 
   private grid: TileType[][];
+  private readonly initialGrid: TileType[][];
+  private readonly initialChestsCount: number;
 
   constructor(parsed: ParsedLevel) {
+    this.initialGrid = parsed.grid.map((row) => [...row]);
+    this.initialChestsCount = parsed.chestsCount;
     this.grid = parsed.grid;
     this.rows = parsed.grid.length;
     this.cols = parsed.grid[0].length;
     this.start = parsed.start;
     this.chestsCount = parsed.chestsCount;
+  }
+
+  reset(): void {
+    this.grid = this.initialGrid.map((row) => [...row]);
+    this.chestsCount = this.initialChestsCount;
   }
 
   getCell(col: number, row: number): TileType {
