@@ -383,6 +383,9 @@ Mute: по клавише M — audio.muted = !audio.muted для всех.
 | Enter / любая  | Пропустить интро, подтвердить в меню |
 | Клик по кнопке | Действие кнопки                      |
 
+- Enter/Space, Esc/P, M, клики — **edge-triggered**. Режим сам решает, что делать с нажатием (в `Playing` Esc = пауза, в `Menu` Enter = Start). Реализация: `consumeConfirm/consumePause/consumeMute/consumeClick` в input.
+- Клики нормируются через `getBoundingClientRect` canvas → логические 800×600 (учёт CSS-скейла).
+
 Важно:
 
 - preventDefault() на стрелках, чтобы не скроллить страницу.
@@ -533,6 +536,7 @@ render/
     renderer.ts — отрисовка сцены, HUD-полосы, GameOver-оверлея
 game/
     game.ts — состояние игры: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
+    modeMachine.ts — FSM режимов
     rating.ts — getRating(levelIndex) → строка
 ```
 

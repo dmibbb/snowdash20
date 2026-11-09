@@ -1,8 +1,9 @@
 import './style.css';
-import { TICK_MS } from './config';
-import { initInput, getDirection } from './input/input';
-import { render } from './render/renderer';
+import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
+import { initInput, getDirection, consumeConfirm } from './input/input';
 import { Game } from './game/game';
+import { ModeMachine } from './game/modeMachine';
+import { render as renderGame } from './render/renderer';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -15,7 +16,7 @@ function getContext(): CanvasRenderingContext2D {
 const ctx = getContext();
 ctx.imageSmoothingEnabled = false;
 
-initInput();
+initInput(canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 async function loadLevelFile(path: string): Promise<string> {
   const res = await fetch(path);
@@ -40,15 +41,61 @@ async function main(): Promise<void> {
     .filter(Boolean)
     .map((p) => `/${p}`);
 
-  const game = new Game(levelPaths, loadLevelFile);
-  await game.start();
+  const machine = new ModeMachine();
+
+  let game: Game | null = null;
+  let startingGame = false;
+
+  async function startGame(): Promise<void> {
+    if (startingGame) return;
+    startingGame = true;
+    try {
+      game = new Game(levelPaths, loadLevelFile);
+      await game.start();
+      machine.setMode('playing');
+    } finally {
+      startingGame = false;
+    }
+  }
+
+  // Playing — real game
+  machine.register('playing', {
+    tick: () => {
+      game?.tick(getDirection());
+    },
+    render: (c) => {
+      if (game) renderGame(c, game);
+    },
+  });
+
+  // Intro — placeholder; press Enter to start
+  // (in 8.4 replaced with real Menu flow)
+  machine.register('intro', {
+    tick: () => {
+      if (consumeConfirm()) {
+        void startGame();
+      }
+    },
+    render: (c) => {
+      c.fillStyle = '#000';
+      c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      c.fillStyle = '#ecf0f1';
+      c.font = 'bold 24px monospace';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText('SNOWDASH — PRESS ENTER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    },
+  });
+
+  // Empty modes — filled in later sub-phases (8.4 – 8.7)
+  machine.register('menu', {});
+  machine.register('help', {});
+  machine.register('gameover', {});
+
+  machine.setMode('intro');
 
   let lastTime = performance.now();
   let accumulator = 0;
-
-  function tick(): void {
-    game.tick(getDirection());
-  }
 
   function loop(now: number): void {
     const dt = Math.min(now - lastTime, 250);
@@ -56,11 +103,11 @@ async function main(): Promise<void> {
     accumulator += dt;
 
     while (accumulator >= TICK_MS) {
-      tick();
+      machine.tick();
       accumulator -= TICK_MS;
     }
 
-    render(ctx, game);
+    machine.render(ctx);
     requestAnimationFrame(loop);
   }
 

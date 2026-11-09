@@ -46,8 +46,9 @@ src/
 │   ├── stone.ts   — Stone: idle/falling/pushed, гравитация, скатывание, толкание
 │   └── monster.ts — Monster: блуждание, killed-флаг, модель 1|2
 ├── game/
-│   ├── game.ts    — Game: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
-│   └── rating.ts  — getRating(levelIndex): строка
+│   ├── game.ts         — Game: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
+│   ├── modeMachine.ts  — ModeMachine: FSM с register/setMode/tick/render, хуки onEnter/onExit
+│   └── rating.ts       — getRating(levelIndex): строка
 ├── level/
 │   ├── parser.ts       — parseLevel(text): ParsedLevel
 │   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
@@ -85,6 +86,26 @@ public/
 // main.ts
 loadLevelFile(path: string): Promise<string>
 main(): Promise<void>
+
+### ModeMachine
+
+```
+// game/modeMachine.ts
+interface ModeHooks {
+  onEnter?: () => void
+  onExit?: () => void
+  tick?: () => void
+  render?: (ctx: CanvasRenderingContext2D) => void
+}
+
+class ModeMachine {
+  currentMode: GameMode
+  register(mode: GameMode, hooks: ModeHooks): void
+  setMode(mode: GameMode): void   // вызывает onExit текущего, переключает, вызывает onEnter нового
+  tick(): void
+  render(ctx: CanvasRenderingContext2D): void
+}
+```
 
 ### Game
 
@@ -209,8 +230,12 @@ render(ctx: CanvasRenderingContext2D, game: Game): void
 
 ```
 // input/input.ts
-initInput(): void
-getDirection(): Direction | null
+initInput(canvas: HTMLCanvasElement, w?: number, h?: number): void
+getDirection(): Direction | null       // continuous (held keys)
+consumeConfirm(): boolean              // edge: Enter/Space
+consumePause(): boolean                // edge: Esc/P
+consumeMute(): boolean                 // edge: M
+consumeClick(): { x: number; y: number } | null  // edge: mousedown, в логических координатах (с учётом CSS-скейла)
 ```
 
 ---
@@ -280,6 +305,9 @@ getDirection(): Direction | null
 - **Reset vs Reload при смерти.** При `onPlayerHit` с `lives > 0` вызывается `resetLevel()` — та же сцена, все сущности на стартовых позициях, `Level.reset()` восстанавливает тайлы и `chestsCount`. Уровень НЕ перезагружается с диска. `score` сохраняется.
 - **HUD в фазе 7 — текстовый.** `Lives: N`, `Score: N`, `Level: N` через `ctx.fillText`. В фазе 8 заменяется на спрайтовые цифры/иконки.
 - **GameOver-оверлей.** При `isGameOver === true` поверх поля рисуется `rgba(0,0,0,0.75)` + `GAME OVER` + `Score: N` + `Rating: <getRating(levelIndex)>`.
+- **FSM (фаза 8.1).** `ModeMachine` в `game/modeMachine.ts` диспатчит `tick`/`render` по `currentMode` через зарегистрированные хуки. `main.ts` регистрирует все режимы, `machine.setMode('intro')` при старте. `Playing` содержит всю игровую логику; `Intro/Menu/Help/GameOver` — заглушки, заполнятся в 8.4–8.7.
+- **Input — edge-triggered.** `getDirection()` читает held keys (для движения). `consumeConfirm/Pause/Mute/Click` — edge-triggered: накапливают событие, отдают при вызове и сбрасывают. Режим сам решает, что делать с событием. `initInput` принимает canvas, чтобы нормировать клики через `getBoundingClientRect` (учёт CSS-скейла).
+- **Intro — временный shortcut (8.1).** Сейчас `Intro` — чёрный экран с «SNOWDASH — PRESS ENTER». Enter/Space → `startGame()` → `Playing`. В 8.6 заменим на полную анимацию R/G/B/Team/Presents + скип по любой клавише → `Menu`. В 8.4 между Intro и Playing появится Menu.
 
 ### Монстры и проходимость
 
