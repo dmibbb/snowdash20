@@ -1,8 +1,14 @@
 import type { TileType } from '../types';
-import type { Player } from '../entities/player';
-import type { Level } from '../level/level';
 import type { Game } from '../game/game';
-import { CANVAS_WIDTH, TILE_SIZE, GRID_ROWS, HUD_HEIGHT, DEBUG_TILE_LABELS } from '../config';
+import { getRating } from '../game/rating';
+import {
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  TILE_SIZE,
+  GRID_ROWS,
+  HUD_HEIGHT,
+  DEBUG_TILE_LABELS,
+} from '../config';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -21,8 +27,8 @@ const TILE_LETTERS: Record<TileType, string> = {
 };
 
 const MONSTER_COLORS: Record<number, string> = {
-  1: '#e74c3c', // Amoeba
-  2: '#e67e22', // Spiker
+  1: '#e74c3c',
+  2: '#e67e22',
 };
 
 const MONSTER_LETTERS: Record<number, string> = {
@@ -47,29 +53,47 @@ function drawLabel(
   ctx.fillText(text, cx, cy);
 }
 
-export function render(
-  ctx: CanvasRenderingContext2D,
-  level: Level,
-  player: Player,
-  game: Game,
-): void {
-  // Background
-  ctx.fillStyle = '#2c3e50';
+function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
   ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#e74c3c';
+  ctx.font = 'bold 48px monospace';
+  ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 - 60);
+
+  ctx.fillStyle = '#ecf0f1';
+  ctx.font = '24px monospace';
+  ctx.fillText(`Score: ${game.score}`, CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 + 10);
+  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, CANVAS_WIDTH / 2, FIELD_HEIGHT / 2 + 50);
+}
+
+export function render(ctx: CanvasRenderingContext2D, game: Game): void {
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  if (!game.level || !game.player) {
+    ctx.fillStyle = '#ecf0f1';
+    ctx.font = '24px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Loading...', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    return;
+  }
 
   // Visual cell grid — TODO: remove in final release
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
-
-  for (let col = 0; col <= level.cols; col++) {
+  for (let col = 0; col <= game.level.cols; col++) {
     const x = col * TILE_SIZE + 0.5;
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, FIELD_HEIGHT);
     ctx.stroke();
   }
-
-  for (let row = 0; row <= level.rows; row++) {
+  for (let row = 0; row <= game.level.rows; row++) {
     const y = row * TILE_SIZE + 0.5;
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -78,9 +102,9 @@ export function render(
   }
 
   // Tiles
-  for (let row = 0; row < level.rows; row++) {
-    for (let col = 0; col < level.cols; col++) {
-      const tile = level.getCell(col, row);
+  for (let row = 0; row < game.level.rows; row++) {
+    for (let col = 0; col < game.level.cols; col++) {
+      const tile = game.level.getCell(col, row);
       if (tile === 'empty') continue;
 
       ctx.fillStyle = TILE_COLORS[tile];
@@ -99,7 +123,6 @@ export function render(
   for (const stone of game.stones) {
     ctx.fillStyle = '#34495e';
     ctx.fillRect(stone.x, stone.y, TILE_SIZE, TILE_SIZE);
-
     if (DEBUG_TILE_LABELS) {
       drawLabel(
         ctx,
@@ -114,10 +137,8 @@ export function render(
   // Monsters
   for (const monster of game.monsters) {
     if (monster.killed) continue;
-
     ctx.fillStyle = MONSTER_COLORS[monster.model];
     ctx.fillRect(monster.x, monster.y, TILE_SIZE, TILE_SIZE);
-
     if (DEBUG_TILE_LABELS) {
       drawLabel(
         ctx,
@@ -138,19 +159,23 @@ export function render(
   ctx.lineTo(CANVAS_WIDTH, FIELD_HEIGHT + 1);
   ctx.stroke();
 
-  // HUD text — placeholder for phase 8 (real sprites)
   ctx.fillStyle = '#ecf0f1';
   ctx.font = '20px monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`Score: ${game.score}`, 20, FIELD_HEIGHT + HUD_HEIGHT / 2);
-  ctx.fillText(`Chests: ${game.visibleChests}`, CANVAS_WIDTH - 180, FIELD_HEIGHT + HUD_HEIGHT / 2);
+  const hudY = FIELD_HEIGHT + HUD_HEIGHT / 2;
+  ctx.fillText(`Lives: ${game.lives}`, 20, hudY);
+  ctx.fillText(`Score: ${game.score}`, 300, hudY);
+  ctx.fillText(`Level: ${game.levelIndex + 1}`, 620, hudY);
 
   // Player
   ctx.fillStyle = '#3498db';
-  ctx.fillRect(player.x, player.y, TILE_SIZE, TILE_SIZE);
-
+  ctx.fillRect(game.player.x, game.player.y, TILE_SIZE, TILE_SIZE);
   if (DEBUG_TILE_LABELS) {
-    drawLabel(ctx, 'P', player.x + TILE_SIZE / 2, player.y + TILE_SIZE / 2);
+    drawLabel(ctx, 'P', game.player.x + TILE_SIZE / 2, game.player.y + TILE_SIZE / 2);
+  }
+
+  if (game.isGameOver) {
+    drawGameOverOverlay(ctx, game);
   }
 }

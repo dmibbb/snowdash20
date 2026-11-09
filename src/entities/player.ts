@@ -62,21 +62,37 @@ export class Player {
       // Walking into a living monster = death (SPEC 9)
       const monster = this.findMonsterAt(monsters, next.col, next.row);
       if (monster) {
-        game.onPlayerHit(this, level);
+        game.onPlayerHit();
         return;
       }
 
-      // Check for stone in target cell
-      const stone = this.findStoneAt(stones, next.col, next.row);
-      if (stone && stone.state === 'idle') {
-        // Try to push; if push fails, player is blocked.
-        const pushed = stone.tryPush(this.direction, level, stones);
-        if (!pushed) return;
-        // If push succeeded, stone is now 'pushed' — fall through and let player move too.
+      // Block entry into any cell still overlapped by a falling stone.
+      // getCell() rounds, so a mid-fall stone may report the next cell up
+      // while its pixels still occupy the target cell — walking in would kill.
+      const targetX = next.col * TILE_SIZE;
+      const targetY = next.row * TILE_SIZE;
+      for (const s of stones) {
+        if (s.state !== 'falling') continue;
+        if (
+          s.x < targetX + TILE_SIZE &&
+          s.x + TILE_SIZE > targetX &&
+          s.y < targetY + TILE_SIZE &&
+          s.y + TILE_SIZE > targetY
+        ) {
+          return;
+        }
       }
 
-      this.targetX = next.col * TILE_SIZE;
-      this.targetY = next.row * TILE_SIZE;
+      // Check for idle stone to push in the target cell
+      const stone = this.findStoneAt(stones, next.col, next.row);
+      if (stone && stone.state === 'idle') {
+        const pushed = stone.tryPush(this.direction, level, stones);
+        if (!pushed) return;
+      }
+      // Pushed stone → fall through: player follows.
+
+      this.targetX = targetX;
+      this.targetY = targetY;
       this.state = 'moving';
     }
 

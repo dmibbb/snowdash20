@@ -4,10 +4,10 @@ B..S.S.S.S.S.S.....B
 B..S.C.S.C.S.C..M..B
 B..S.S.S.S.S.S.....B
 B..................B
-B.K....K........S..B
-BBKBB..............B
+BPK.............S..B
+BBKBB..K...........B
 BBSBB..............B
 B..............U..CB
-B...P.....K..K.....B
+B.........K..K.....B
 B.........K....C...B
 BBBBBBBBBBBBBBBBBBBB

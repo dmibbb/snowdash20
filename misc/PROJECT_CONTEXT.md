@@ -3,9 +3,9 @@
 > Живой документ. Обновляется после каждой фазы.
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
-> **Последнее обновление:** 2026-11-09
-> **Текущая фаза:** 7 — Game State & Progression
-> **Следующая фаза:** 8 — UI — HUD, Pause, Modes
+> **Последнее обновление:** 2026-11-10
+> **Текущая фаза:** 8 — UI — HUD, Pause, Modes
+> **Следующая фаза:** 9 — Sound
 
 ---
 
@@ -19,8 +19,8 @@
 | 4   | Tiles Interactions       | ✅ Done        | 2026-11-09 |
 | 5   | Stones                   | ✅ Done        | 2026-11-09 |
 | 6   | Monsters                 | ✅ Done        | 2026-11-09 |
-| 7   | Game State & Progression | 🔄 in progress |            |
-| 8   | UI — HUD, Pause, Modes   | ⏸ not started  |            |
+| 7   | Game State & Progression | ✅ Done        | 2026-11-10 |
+| 8   | UI — HUD, Pause, Modes   | 🔄 in progress |            |
 | 9   | Sound                    | ⏸ not started  |            |
 | 10  | Real Assets              | ⏸ not started  |            |
 | 11  | Tests, Polish, Deploy    | ⏸ not started  |            |
@@ -35,24 +35,25 @@
 
 ```
 src/
-├── main.ts — точка входа: canvas, загрузка уровня, rAF-цикл, tick()/render()
-├── config.ts — все игровые константы
-├── types.ts — Direction, GameMode, TileType, Point, CellCoords
-├── style.css — центрирование canvas 1:1, image-rendering: pixelated
+├── main.ts        — тонкая точка входа: загрузка level_list.txt, создание Game, RAF-цикл
+├── config.ts      — все игровые константы
+├── types.ts       — Direction, GameMode, TileType, Point, CellCoords
+├── style.css      — центрирование canvas 1:1, image-rendering: pixelated
 ├── input/
-│   └── input.ts — клавиатура: стрелки/WASD, preventDefault, сброс на blur
+│   └── input.ts   — клавиатура: стрелки/WASD, preventDefault, сброс на blur
 ├── entities/
-│   ├── player.ts  — класс Player: движение по клеткам, еда снега/сундуков, проверка камней/монстров впереди
-│   ├── stone.ts   — класс Stone: idle/falling/pushed, гравитация, скатывание, толкание
-│   └── monster.ts — класс Monster: случайное блуждание, killed-флаг, модель 1|2
+│   ├── player.ts  — Player: движение, еда снега/сундуков, проверка камней/монстров
+│   ├── stone.ts   — Stone: idle/falling/pushed, гравитация, скатывание, толкание
+│   └── monster.ts — Monster: блуждание, killed-флаг, модель 1|2
 ├── game/
-│   └── game.ts    — минимальный Game: score, visibleChests, stones[], monsters[], onPlayerHit
+│   ├── game.ts    — Game: score, lives, levelIndex, level, player, stones, monsters, isGameOver; загрузка уровней, tick, onPlayerHit
+│   └── rating.ts  — getRating(levelIndex): строка
 ├── level/
-│   ├── parser.ts — parseLevel(text): ParsedLevel; валидация, срез BOM/пустых строк
-│   ├── parser.test.ts — 7 юнит-тестов (Vitest)
-│   └── level.ts — класс Level: сетка тайлов, getCell/setCell/isPassable
+│   ├── parser.ts       — parseLevel(text): ParsedLevel
+│   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
+│   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
 └── render/
-    └── renderer.ts — отрисовка: фон, сетка, тайлы (плейсхолдеры), HUD-полоса, игрок
+    └── renderer.ts — render(ctx, game): фон, сетка, тайлы, камни, монстры, HUD, player, GameOver-оверлей
 ```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
@@ -64,7 +65,10 @@ src/
 ```
 public/
 └── levels/
-    └── level01.txt — первый уровень (13 строк × 20 символов)
+    ├── level_list.txt  — список путей к уровням (level01/02/03)
+    ├── level01.txt     — тестовый уровень: стены, снег, сундуки, 4 камня, 1 амеба, 1 спайкер
+    ├── level02.txt     — простой тест перехода: 2 сундука + 1 амеба
+    └── level03.txt     — простой тест перехода: 2 сундука + камень + спайкер
 ```
 
 Ассеты (спрайты, звук) — появятся в фазах 9–10. Пока используются плейсхолдеры.
@@ -78,24 +82,43 @@ public/
 
 ### Точка входа
 
-```
 // main.ts
 loadLevelFile(path: string): Promise<string>
--- fetch + проверка, что вернулся не index.html (защита от 404 → SPA fallback)
-
 main(): Promise<void>
--- загружает /levels/level01.txt, парсит, создаёт Level и Player, запускает rAF
-```
+
+### Game
+
+// game/game.ts
+type LevelFetcher = (path: string) => Promise<string>
+
+class Game {
+score: number
+lives: number
+levelIndex: number
+visibleChests: number
+level: Level | null
+player: Player | null
+stones: Stone[]
+monsters: Monster[]
+isGameOver: boolean
+
+constructor(levelPaths: string[], fetchLevel: LevelFetcher)
+start(): Promise<void>
+loadLevel(index: number): Promise<void>
+tick(input: Direction | null): void
+onPlayerHit(): void
+}
+
+### Rating
+
+// game/rating.ts
+getRating(levelIndex: number): string
 
 ### Parser
 
 ```
 // level/parser.ts
-interface MonsterStart {
-  col: number
-  row: number
-  model: 1 | 2
-}
+interface MonsterStart { col, row, model: 1|2 }
 
 interface ParsedLevel {
   grid: TileType[][]
@@ -108,18 +131,19 @@ interface ParsedLevel {
 parseLevel(text: string): ParsedLevel
 ```
 
-### Game
+### Level
 
 ```
-// game/game.ts
-class Game {
-  score: number
-  visibleChests: number
-  stones: Stone[]
-  monsters: Monster[]
+// level/level.ts
+class Level {
+  readonly cols, rows, tileSize: number
+  readonly start: CellCoords
+  chestsCount: number
 
-  onPlayerHit(player: Player, level: Level): void
-  // Lives, levelIndex, level switching, GameOver — in phase 7.
+  reset(): void
+  getCell(col, row): TileType       // вне границ → 'wall'
+  setCell(col, row, type): void
+  isPassable(col, row): boolean     // true кроме 'wall'
 }
 ```
 
@@ -134,49 +158,8 @@ class Player {
 
   getCell(): CellCoords
   resetToStart(): void
-  update(
-    inputDir: Direction | null,
-    level: Level,
-    game: Game,
-    stones: Stone[],
-    monsters: Monster[],
-  ): void
+  update(inputDir: Direction | null, level: Level, game: Game, stones: Stone[], monsters: Monster[]): void
 }
-```
-
-### Level
-
-```
-// level/level.ts
-class Level {
-  readonly cols, rows, tileSize: number
-  readonly start: CellCoords
-  chestsCount: number
-
-  getCell(col, row): TileType // вне границ → 'wall'
-  setCell(col, row, type): void // вне границ → no-op
-  isPassable(col, row): boolean // true кроме 'wall'
-}
-```
-
-### Renderer
-
-```
-// render/renderer.ts
-render(
-  ctx: CanvasRenderingContext2D,
-  level: Level,
-  player: Player,
-  game: Game,
-): void
-```
-
-### Input
-
-```
-// input/input.ts
-initInput(): void
-getDirection(): Direction | null // приоритет: up > down > left > right
 ```
 
 ### Stone
@@ -215,7 +198,20 @@ class Monster {
 }
 ```
 
-> ⚠️ Остальные интерфейсы (`InputState`, `Audio`) — добавить, когда появятся в коде.
+### Renderer
+
+```
+// render/renderer.ts
+render(ctx: CanvasRenderingContext2D, game: Game): void
+```
+
+### Input
+
+```
+// input/input.ts
+initInput(): void
+getDirection(): Direction | null
+```
 
 ---
 
@@ -248,6 +244,7 @@ class Monster {
 
 - **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
 - **Пауза** — в оригинале при Pause музыку/SFX приглушали; у нас — `audio.muted` на время паузы.
+- **Player заблокирован `falling`-камнем (AABB, не getCell).** Попытка войти в клетку, пиксельно перекрытую падающим камнем, блокируется. Проверка идёт по AABB камня и целевой клетки, а не через `findStoneAt` — `getCell()` округляет, и камень «середине падения» может логически быть уже в следующей клетке, физически занимая часть текущей. В оригинале игрок мог войти и умереть — мы блокируем как UX-улучшение.
 
 ### Скорости
 
@@ -278,6 +275,11 @@ class Monster {
 - Толкание с follow
 - Level.reset() при смерти — восстанавливает тайлы, score сохраняется
 - pushed используется и для push игроком, и для rolling
+- **Толкание переопределяет гравитацию.** `tryPush` не проверяет `canFall`: пока камень `pushed` — он катится горизонтально, даже если под ним пусто. Гравитация включается, только когда игрок отпускает клавишу (камень становится `idle`, `tryStartFallingOrRolling` роняет его). Соответствует оригиналу.
+- **Game владеет уровнями.** `Game` получает `levelPaths` и `fetchLevel` в конструкторе. `loadLevel` асинхронный, `loading`-флаг блокирует tick во время загрузки. `onLevelComplete` инкрементит `levelIndex`, при `nextIndex >= levelPaths.length` ставит `isGameOver = true`.
+- **Reset vs Reload при смерти.** При `onPlayerHit` с `lives > 0` вызывается `resetLevel()` — та же сцена, все сущности на стартовых позициях, `Level.reset()` восстанавливает тайлы и `chestsCount`. Уровень НЕ перезагружается с диска. `score` сохраняется.
+- **HUD в фазе 7 — текстовый.** `Lives: N`, `Score: N`, `Level: N` через `ctx.fillText`. В фазе 8 заменяется на спрайтовые цифры/иконки.
+- **GameOver-оверлей.** При `isGameOver === true` поверх поля рисуется `rgba(0,0,0,0.75)` + `GAME OVER` + `Score: N` + `Rating: <getRating(levelIndex)>`.
 
 ### Монстры и проходимость
 
@@ -330,10 +332,13 @@ class Monster {
 
 ### Уровни
 
-| Что        | Где                             | Статус |
-| ---------- | ------------------------------- | ------ |
-| 10 уровней | `public/levels/level01..10.txt` | ⏸      |
-| Список     | `public/levels/level_list.txt`  | ⏸      |
+| Что             | Где                            | Статус                                 |
+| --------------- | ------------------------------ | -------------------------------------- |
+| level01.txt     | `public/levels/level01.txt`    | ✅ (стены, снег, сундуки, камни, M, U) |
+| level02.txt     | `public/levels/level02.txt`    | ✅ (2 сундука, M)                      |
+| level03.txt     | `public/levels/level03.txt`    | ✅ (2 сундука, K, U)                   |
+| level_list.txt  | `public/levels/level_list.txt` | ✅ (3 пути)                            |
+| level04..10.txt | —                              | ⏸ фаза 10                              |
 
 ---
 
@@ -369,6 +374,7 @@ npm test — юнит-тесты (Vitest)
 - **Импорты:** относительные, без алиасов.
 - **Комментарии в коде — на английском.** Русский — только в документации (`SPEC.md`, `PROJECT_CONTEXT.md`, коммиты).
 - **Процесс:** в конце каждой фазы сначала `npm run build` (зелёный), потом `npm test` (зелёный), потом `npm run dev` + чек-лист.
+- **`erasableSyntaxOnly: true`.** Нельзя использовать parameter properties (`constructor(private x: T)`), `enum`, `namespace`. Поля объявлять явно, присваивать в теле конструктора. `enum` заменять union-типами.
 
 ---
 

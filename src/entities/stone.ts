@@ -53,9 +53,10 @@ export class Stone {
     if (this.state !== 'idle') return false;
     if (direction !== 'left' && direction !== 'right') return false;
 
-    // Can't push a stone that isn't on solid ground
-    if (this.canFall(level, stones)) return false;
-
+    // Do NOT check canFall here. In the original, an actively pushed stone
+    // keeps rolling horizontally even if the cell below is empty — gravity
+    // only kicks in once the player stops pushing. This prevents the "player
+    // follows a falling stone and dies" bug.
     const cell = this.getCell();
     const dc = direction === 'left' ? -1 : 1;
     const targetCol = cell.col + dc;

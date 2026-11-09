@@ -1,3 +1,6 @@
+// Запуск с рута проекта:
+// node ./misc/dump.cjs 
+
 const fs = require('fs');
 const path = require('path');
 
