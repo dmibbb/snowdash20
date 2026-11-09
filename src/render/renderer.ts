@@ -1,14 +1,8 @@
 import type { TileType } from '../types';
 import type { Game } from '../game/game';
 import { getRating } from '../game/rating';
-import {
-  CANVAS_WIDTH,
-  CANVAS_HEIGHT,
-  TILE_SIZE,
-  GRID_ROWS,
-  HUD_HEIGHT,
-  DEBUG_TILE_LABELS,
-} from '../config';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, GRID_ROWS, DEBUG_TILE_LABELS } from '../config';
+import { renderHud } from './hud';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -149,24 +143,7 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
     }
   }
 
-  // HUD
-  ctx.fillStyle = '#4a4a4a';
-  ctx.fillRect(0, FIELD_HEIGHT, CANVAS_WIDTH, HUD_HEIGHT);
-  ctx.strokeStyle = '#ecf0f1';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, FIELD_HEIGHT + 1);
-  ctx.lineTo(CANVAS_WIDTH, FIELD_HEIGHT + 1);
-  ctx.stroke();
-
-  ctx.fillStyle = '#ecf0f1';
-  ctx.font = '20px monospace';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  const hudY = FIELD_HEIGHT + HUD_HEIGHT / 2;
-  ctx.fillText(`Lives: ${game.lives}`, 20, hudY);
-  ctx.fillText(`Score: ${game.score}`, 300, hudY);
-  ctx.fillText(`Level: ${game.levelIndex + 1}`, 620, hudY);
+  renderHud(ctx, game);
 
   // Player
   ctx.fillStyle = '#3498db';

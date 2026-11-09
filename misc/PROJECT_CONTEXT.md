@@ -54,7 +54,8 @@ src/
 │   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
 │   └── level.ts        — Level: сетка, getCell/setCell/isPassable, reset
 └── render/
-    └── renderer.ts — render(ctx, game): фон, сетка, тайлы, камни, монстры, HUD, player, GameOver-оверлей
+    ├── renderer.ts — render(ctx, game): сцена + GameOver-оверлей
+    └── hud.ts      — renderHud(ctx, game): HUD-полоса
 ```
 
 `—` → краткое описание, что делает файл. Заполняется по мере появления.
@@ -105,6 +106,13 @@ class ModeMachine {
   tick(): void
   render(ctx: CanvasRenderingContext2D): void
 }
+```
+
+### HUD
+
+```
+// render/hud.ts
+renderHud(ctx: CanvasRenderingContext2D, game: Game): void
 ```
 
 ### Game
