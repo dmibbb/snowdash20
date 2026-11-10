@@ -39,6 +39,8 @@ src/
 ├── config.ts      — все игровые константы
 ├── types.ts       — Direction, GameMode, TileType, Point, CellCoords
 ├── style.css      — центрирование canvas 1:1, image-rendering: pixelated
+├── audio/
+│   └── audio.ts   — AudioManager (синглтон audio): preload, unlock, playMusic, stopMusic, playSfx (stub), toggleMute, setPaused
 ├── input/
 │   └── input.ts   — keyboard + mouse: continuous (getDirection, getMousePosition) и edge (consume*)
 ├── entities/
@@ -286,6 +288,26 @@ createHelp(callbacks: { onBack: () => void }): ModeHooks
 createGameOver(callbacks: { getGame: () => Game | null, onBack: () => void }): ModeHooks
 ```
 
+### Audio
+
+```
+// audio/audio.ts
+class AudioManager {
+  get isMuted(): boolean
+  get isPaused(): boolean
+
+  preload(): Promise<void>
+  unlock(): Promise<void>
+  playMusic(id: number): void
+  stopMusic(): void
+  playSfx(id: number): void       // TODO 9.3
+  toggleMute(): void
+  setPaused(paused: boolean): void
+}
+
+export const audio: AudioManager
+```
+
 ---
 
 ## 4. Принятые решения и отклонения от SPEC
@@ -309,14 +331,23 @@ createGameOver(callbacks: { getGame: () => Game | null, onBack: () => void }): M
 
 ### Аудио
 
-- **Музыка:** `HTMLAudioElement`, предзагрузка при старте, `loop = false`, переключение по `onended`.
-- **SFX:** пул `HTMLAudioElement` — по одному экземпляру на каждый файл, при воспроизведении `currentTime = 0; play()`.
-- **Разблокировка:** на первом `click`/`keydown` — проигрываем «тихий» звук, чтобы разблокировать autoplay.
+- **AudioManager** (`src/audio/audio.ts`, синглтон `audio`). Предзагрузка всех mp3 при старте (`void audio.preload()`, без await). Пути: `/sounds/music/{01..04}.mp3`, `/sounds/sfx/{id}.mp3`. Список ID: `MUSIC_IDS = [1,2,3,4]`, `SFX_IDS = [11..23, 26..34, 35, 36, 38]` (24, 25, 37 — нет в оригинале). При ошибке загрузки — `console.warn`, промис резолвится, игра продолжается.
+- **Музыка.** `HTMLAudioElement` в Map по id. Плейлист: `MUSIC_NEXT = { 1:1, 2:3, 3:4, 4:2 }`. Трек 01 зациклен через `audio.loop = true`. Остальные — через `onended` → `playMusic(next)`. `Playing.onEnter` → `audio.playMusic(2)`, `Playing.onExit` → `audio.stopMusic()`, `Menu.onEnter` и `GameOver.onEnter` → `audio.playMusic(1)`.
+- **Музыка.** `HTMLAudioElement` в Map по id. Плейлист: `MUSIC_NEXT = { 1:1, 2:3, 3:4, 4:2 }`. Трек 01 зациклен через `audio.loop = true`. Остальные — через `onended` → `playMusic(next)`.
+- **По режимам:**
+  - `Menu.onEnter` → `audio.playMusic(1)`
+  - `GameOver.onEnter` → `audio.playMusic(1)`
+  - `Playing.onEnter` → `audio.playMusic(2)`, `Playing.onExit` → `audio.stopMusic()`
+  - `Help` — наследует 01 от Menu, ничего не трогает
+  - `Intro` — в текущей реализации беззвучное (autoplay), целевое — с треком 01 после splash screen (см. раздел 7)- **Autoplay unlock.** На первом `keydown`/`mousedown`/`touchstart` — `audio.unlock()`: проигрывает трек 01 с `volume = 0`, ставит на паузу, `currentTime = 0`, восстанавливает `volume`. После этого браузер разрешает `play()`. В `main.ts` три слушателя снимаются после первого срабатывания.
+- **Mute.** Клавиша M в любом режиме → `consumeMute()` в `main.ts` (перед `machine.tick()`) → `audio.toggleMute()`. Регулирует `volume` текущей музыки. SFX — добавятся в 9.3.
+- **Пауза.** `Playing` при Esc/P → `audio.setPaused(paused)`: `pause()` / `play()` текущего трека. SFX не глушатся (9.4).
+- **SFX.** Пока `playSfx()` — stub. Реализация в 9.3.
 
 ### Отклонения от оригинала
 
 - **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
-- **Пауза** — в оригинале при Pause музыку/SFX приглушали; у нас — `audio.muted` на время паузы.
+- **Пауза** — в оригинале при Pause музыку/SFX приглушали (`SetPause` в FMOD). У нас — `audio.setPaused(true)`: текущий трек ставится на паузу (`current.pause()`), при снятии — `current.play()`. SFX не глушатся (SFX-pause — в 9.4).
 - **Player заблокирован `falling`-камнем (AABB, не getCell).** Попытка войти в клетку, пиксельно перекрытую падающим камнем, блокируется. Проверка идёт по AABB камня и целевой клетки, а не через `findStoneAt` — `getCell()` округляет, и камень «середине падения» может логически быть уже в следующей клетке, физически занимая часть текущей. В оригинале игрок мог войти и умереть — мы блокируем как UX-улучшение.
 
 ### Скорости
@@ -420,10 +451,34 @@ createGameOver(callbacks: { getGame: () => Game | null, onBack: () => void }): M
 
 ### Звук
 
-| Что          | Где                    | Статус |
-| ------------ | ---------------------- | ------ |
-| Музыка 01–04 | `public/sounds/music/` | ⏸      |
-| SFX 11–38    | `public/sounds/sfx/`   | ⏸      |
+| Что          | Где                    | Статус                                             |
+| ------------ | ---------------------- | -------------------------------------------------- |
+| Музыка 01–04 | `public/sounds/music/` | ✅ 01–04.mp3 на местах                             |
+| SFX 11–38    | `public/sounds/sfx/`   | ✅ 25 файлов (кроме 24,25,37 — их нет в оригинале) |
+
+```
+public/
+└── sounds/
+    ├── music/
+    │   ├── 01.mp3   ← Midnight Dreams.mp3 (переименован)
+    │   ├── 02.mp3   ← Eastern Thriller.mp3
+    │   ├── 03.mp3   ← Escapist.mp3
+    │   └── 04.mp3   ← Last Runaway.mp3
+    └── sfx/
+        ├── 11.mp3   ← 250 Points.mp3
+        ├── 12.mp3 ... 19.mp3   ← Eating Hero 1..8
+        ├── 20.mp3 ... 23.mp3   ← Enemy Die 1..4
+        ├── 26.mp3 ... 29.mp3   ← Hero Die 1..4
+        ├── 30.mp3   ← Level Done.mp3
+        ├── 31.mp3   ← Mouse Click.mp3
+        ├── 32.mp3   ← Move Snow Ball.mp3
+        ├── 33.mp3, 34.mp3      ← Snow 1, Snow 2
+        ├── 35.mp3   ← Stone Falled.mp3
+        ├── 36.mp3   ← Stone Falling.mp3
+        └── 38.mp3   ← Your Score.mp3
+```
+
+⚠️ Музыка — с ведущим нулём (01.mp3, не 1.mp3). SFX — без (11.mp3, 12.mp3, …). Файлов 24, 25, 37 нет — это нормально, в оригинале их не было.
 
 ### Уровни
 
@@ -451,7 +506,7 @@ npm test — юнит-тесты (Vitest)
 
 > Всё, что сломано, работает не так или отложено.
 
-- Пусто (пока не начали).
+- **Intro беззвучное (временная мера).** Autoplay заблокирован до первого user gesture. В следующей итерации — splash screen с кнопкой Start перед Intro, после которого Intro играет с треком 01. Это вернёт поведение оригинала (SPEC 13.1).
 
 ---
 

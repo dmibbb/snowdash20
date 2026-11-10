@@ -1,6 +1,6 @@
 import './style.css';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
-import { initInput, getDirection, consumePause } from './input/input';
+import { initInput, getDirection, consumePause, consumeMute } from './input/input';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
@@ -9,6 +9,7 @@ import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
 import { createGameOver } from './modes/gameover';
+import { audio } from './audio/audio';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -22,6 +23,18 @@ const ctx = getContext();
 ctx.imageSmoothingEnabled = false;
 
 initInput(canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+// Unlock autoplay on first user gesture (keydown, mouse, touch)
+const unlockAudio = (): void => {
+  void audio.unlock();
+  window.removeEventListener('keydown', unlockAudio);
+  canvas.removeEventListener('mousedown', unlockAudio);
+  canvas.removeEventListener('touchstart', unlockAudio);
+};
+
+window.addEventListener('keydown', unlockAudio);
+canvas.addEventListener('mousedown', unlockAudio);
+canvas.addEventListener('touchstart', unlockAudio);
 
 async function loadLevelFile(path: string): Promise<string> {
   const res = await fetch(path);
@@ -39,6 +52,11 @@ async function loadLevelFile(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
+  // Fire-and-forget audio preload — files load while Intro runs.
+  // Intentionally NOT awaited: no progress bar yet, and autoplay is
+  // blocked until user interacts anyway.
+  void audio.preload();
+
   const listText = await loadLevelFile('/levels/level_list.txt');
   const levelPaths = listText
     .split('\n')
@@ -69,13 +87,16 @@ async function main(): Promise<void> {
     onEnter: () => {
       paused = false;
       consumePause();
+      audio.playMusic(2);
     },
     onExit: () => {
       paused = false;
+      audio.stopMusic();
     },
     tick: () => {
       if (consumePause()) {
         paused = !paused;
+        audio.setPaused(paused);
         return;
       }
       if (paused) return;
@@ -99,17 +120,21 @@ async function main(): Promise<void> {
     }),
   );
 
-  machine.register(
-    'menu',
-    createMenu({
-      onStart: () => {
-        void startGame();
-      },
-      onHelp: () => {
-        machine.setMode('help');
-      },
-    }),
-  );
+  const menuBase = createMenu({
+    onStart: () => {
+      void startGame();
+    },
+    onHelp: () => {
+      machine.setMode('help');
+    },
+  });
+  machine.register('menu', {
+    ...menuBase,
+    onEnter: () => {
+      menuBase.onEnter?.();
+      audio.playMusic(1);
+    },
+  });
 
   machine.register(
     'help',
@@ -120,15 +145,19 @@ async function main(): Promise<void> {
     }),
   );
 
-  machine.register(
-    'gameover',
-    createGameOver({
-      getGame: () => game,
-      onBack: () => {
-        machine.setMode('menu');
-      },
-    }),
-  );
+  const gameoverBase = createGameOver({
+    getGame: () => game,
+    onBack: () => {
+      machine.setMode('menu');
+    },
+  });
+  machine.register('gameover', {
+    ...gameoverBase,
+    onEnter: () => {
+      gameoverBase.onEnter?.();
+      audio.playMusic(1);
+    },
+  });
 
   machine.setMode('intro');
 
@@ -141,6 +170,9 @@ async function main(): Promise<void> {
     accumulator += dt;
 
     while (accumulator >= TICK_MS) {
+      if (consumeMute()) {
+        audio.toggleMute();
+      }
       machine.tick();
       accumulator -= TICK_MS;
     }

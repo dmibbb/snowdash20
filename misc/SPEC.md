@@ -33,17 +33,13 @@ SnowDash — 2D-игра с видом сверху на сетке. Игрок 
 Переходы:
 
 - Intro → Menu (по таймеру или вводу)
-- Menu → Playing (Start, новая игра с нуля: score=0, lives=4, level=1)
-- Menu → Help (Help!)
+- Menu → Playing: новая игра с нуля (новый Game, score=0, lives=4, levelIndex=0)
+- Menu → Help: отдельный GameMode
 - Menu → About: модальный оверлей поверх Menu
-- Menu → Exit: модальный оверлей «Thanks for playing!» + звук 29 (Hero Die 4)
-- Playing → GameOver: полноценный GameMode (не оверлей), кнопка Back to Menu
+- Menu → Exit: модальный оверлей «Thanks for playing!» + SFX 29 (Hero Die 4), без закрытия окна
 - Help → Menu (Back)
-- Playing → GameOver (0 жизней или все уровни пройдены)
-- GameOver → Menu
-- Menu → Playing: пересоздаётся новый Game (счёт/жизни/уровень с нуля).
-- Menu → About: модальный оверлей поверх Menu (не отдельный режим).
-- Menu → Exit: оверлей «Thanks for playing!» + звук Hero Die (уточнить id в фазе 9), без закрытия окна.
+- Playing → GameOver: полноценный GameMode (0 жизней или все уровни пройдены), кнопка Back to Menu
+- GameOver → Menu (Game сбрасывается, следующий Start создаст новый)
 
 ## 4. Рендер и разрешение
 
@@ -78,7 +74,7 @@ SnowDash — 2D-игра с видом сверху на сетке. Игрок 
 
 ## 6. Система координат
 
-- Каждая сущность имеет пиксельные координаты xPos, yPos (левый верхний угол спрайта) и клеточные координаты cell = floor(pixel / 40).
+- Каждая сущность имеет пиксельные координаты x, y (левый верхний угол спрайта) и клеточные координаты cell = floor(pixel / 40).
 - Игровое поле — двумерный массив Cell[][], где Cell — контейнер для статического тайла и (опционально) динамической сущности.
 - Пиксельные координаты всегда кратны 40, когда сущность стоит на клетке (в середине клетки, а не в углу — сущность размером с клетку совпадает с клеткой).
 
@@ -352,7 +348,9 @@ RGB Team / SnowDash v1.0 / ...2 Dash or not 2 Dash? / Created by RGB Team / (c) 
 
 Трек 01 звучит на экранах Intro и Menu и зациклен сам на себя. По клику Start он останавливается, и запускается игровой цикл 02→03→04→02, который играет до Game Over или до прохождения 10-го уровня. После этого игровые треки (02, 03, 04) останавливаются, и снова включается 01 (возврат в меню).
 
-Автоплей: браузеры блокируют автовоспроизведение до первого клика/нажатия клавиши. Музыка стартует после первого взаимодействия пользователя (клик по Start в меню — идеальная точка).
+Autoplay (текущее ограничение): браузеры блокируют `play()` до первого user gesture. Поэтому Intro в 9.2 беззвучное, первое нажатие клавиши/клик разблокирует аудио и запускает трек 01 на Menu. Целевое поведение — Intro с треком 01: будет реализовано в следующей итерации через splash screen с кнопкой «Start», после которой Intro проигрывается с музыкой. До этого момента Intro остаётся беззвучным как временная мера.
+
+Mute: клавиша M в любом режиме → `audio.toggleMute()`. Регулирует `volume` текущего трека (SFX — в 9.3). Работает и для музыки, и для SFX после их появления.
 
 ### 13.2. SFX
 
@@ -536,7 +534,7 @@ src/
     config.ts — константы игры
     types.ts — общие типы (Direction, GameMode, TileType, ...)
 input/
-    input.ts — keyboard (touch — фаза 10+)
+    input.ts — keyboard + mouse; continuous (getDirection, getMousePosition) и edge (consume*)
 level/
     parser.ts — парсер матрицы уровня
     level.ts — класс Level (сетка, поиск в клетке, reset)
@@ -558,8 +556,8 @@ modes/
     menu.ts     — createMenu({onStart, onHelp})
     help.ts     — createHelp({onBack})
     gameover.ts — createGameOver({getGame, onBack})
-input/
-    input.ts — keyboard + mouse; continuous (getDirection, getMousePosition) и edge (consume*)
+audio/
+    audio.ts — AudioManager (синглтон `audio`): preload, unlock, playMusic, stopMusic, playSfx (stub), toggleMute, setPaused
 ```
 
 level/, entities/, game/tick.ts — чистая логика, без DOM. Тестируется Vitest в Node. render/, audio/, input/, modes/ — браузерный слой.
