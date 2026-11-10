@@ -1,32 +1,47 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_ROWS, TILE_SIZE } from '../config';
 import type { Game } from '../game/game';
 import { getRating } from '../game/rating';
+import { assets } from '../assets/loader';
+import { drawButton, type ButtonRect } from './button';
 
-const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
+export const PAUSE_MENU_BUTTON: ButtonRect = {
+  x: CANVAS_WIDTH / 2 - 100,
+  y: (GRID_ROWS * TILE_SIZE) / 2 + 80,
+  w: 200,
+  h: 50,
+};
 
-export function drawPauseOverlay(ctx: CanvasRenderingContext2D): void {
+export function drawPauseOverlay(ctx: CanvasRenderingContext2D, hoveredMenuBtn: boolean): void {
+  const fieldHeight = GRID_ROWS * TILE_SIZE;
+  const centerY = fieldHeight / 2;
+
   // Dim field
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
+  ctx.fillRect(0, 0, CANVAS_WIDTH, fieldHeight);
 
+  // "PAUSE" image (shifted up slightly)
+  const pauseImg = assets.get('pause');
+  if (pauseImg) {
+    const w = 320;
+    const h = 100;
+    ctx.drawImage(pauseImg, (CANVAS_WIDTH - w) / 2, centerY - h / 2 - 30, w, h);
+  } else {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ecf0f1';
+    ctx.font = 'bold 64px monospace';
+    ctx.fillText('PAUSE', CANVAS_WIDTH / 2, centerY - 30);
+  }
+
+  // Hint text
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const cx = CANVAS_WIDTH / 2;
-  const cy = FIELD_HEIGHT / 2;
-
-  // Shadow
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-  ctx.font = 'bold 64px monospace';
-  ctx.fillText('PAUSE', cx + 3, cy + 3);
-
-  // Main text
-  ctx.fillStyle = '#ecf0f1';
-  ctx.fillText('PAUSE', cx, cy);
-
-  // Hint
   ctx.fillStyle = 'rgba(236, 240, 241, 0.7)';
   ctx.font = '16px monospace';
-  ctx.fillText('Press Esc or P to resume', cx, cy + 70);
+  ctx.fillText('Press Esc or P to resume', CANVAS_WIDTH / 2, centerY + 40);
+
+  // Main Menu button
+  drawButton(ctx, PAUSE_MENU_BUTTON, 'Back to Menu', hoveredMenuBtn, 20);
 }
 
 function drawModalFrame(ctx: CanvasRenderingContext2D): void {
@@ -106,22 +121,32 @@ export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
 }
 
 export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
-  // Field-only dim (HUD stays visible — we're a full mode, not overlay)
   const fieldHeight = GRID_ROWS * TILE_SIZE;
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, fieldHeight);
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
   const cx = CANVAS_WIDTH / 2;
   const cy = fieldHeight / 2;
 
-  ctx.fillStyle = '#e74c3c';
-  ctx.font = 'bold 64px monospace';
-  ctx.fillText('GAME OVER', cx, cy - 80);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, fieldHeight);
 
+  // Draw "GAME OVER" image
+  const goImg = assets.get('gameover');
+  if (goImg) {
+    const w = goImg.width;
+    const h = goImg.height;
+    ctx.drawImage(goImg, cx - w / 2, cy - h / 2 - 60, w, h);
+  } else {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#e74c3c';
+    ctx.font = 'bold 64px monospace';
+    ctx.fillText('GAME OVER', cx, cy - 80);
+  }
+
+  // Draw text stats
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ecf0f1';
-  ctx.font = '28px monospace';
-  ctx.fillText(`Score: ${game.score}`, cx, cy);
-  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, cy + 50);
+  ctx.font = '24px monospace';
+  ctx.fillText(`Score: ${game.score}`, cx, cy + 20);
+  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, cy + 60);
 }

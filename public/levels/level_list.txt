@@ -1,3 +1,10 @@
-levels/level01.txt
-levels/level02.txt
-levels/level03.txt
+levels\0.lvl
+levels\1.lvl
+levels\2.lvl
+levels\3.lvl
+levels\4.lvl
+levels\5.lvl
+levels\6.lvl
+levels\7.lvl
+levels\8.lvl
+levels\9.lvl

@@ -49,7 +49,8 @@ export function parseLevel(text: string): ParsedLevel {
 
     const rowArr: TileType[] = [];
     for (let col = 0; col < GRID_COLS; col++) {
-      const ch = line[col] ?? ' ';
+      const raw = line[col] ?? ' ';
+      const ch = raw.toUpperCase();
       switch (ch) {
         case 'B':
           rowArr.push('wall');
@@ -75,13 +76,14 @@ export function parseLevel(text: string): ParsedLevel {
           monsterStarts.push({ col, row, model: ch === 'M' ? 1 : 2 });
           rowArr.push('empty');
           break;
+        case '-':
         case '.':
         case ' ':
           rowArr.push('empty');
           break;
         default:
           throw new Error(
-            `Unknown symbol '${ch}' (code ${ch.charCodeAt(0)}) at (col=${col}, row=${row})`,
+            `Unknown symbol '${raw}' (code ${raw.charCodeAt(0)}) at (col=${col}, row=${row})`,
           );
       }
     }

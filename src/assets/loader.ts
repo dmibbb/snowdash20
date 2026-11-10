@@ -40,8 +40,6 @@ const SINGLES = [
 ];
 
 const MASKED_SINGLES = [
-  'player',
-  'monster',
   'snowball',
   'pause',
   'gameover',
@@ -111,7 +109,8 @@ class AssetsManager {
       const bmp = await this.loadMasked(`/sprites/${name}.bmp`, `/sprites/${name}_mask.bmp`);
       this.images.set(name, bmp);
     } catch (err) {
-      console.warn(`[Assets] failed: ${name}`, err);
+      console.warn(`[Assets] no mask for ${name}, loading as single image`);
+      await this.loadSingle(name);
     }
   }
 
@@ -139,10 +138,10 @@ class AssetsManager {
     maskCtx.drawImage(mask, 0, 0);
     const maskData = maskCtx.getImageData(0, 0, w, h);
 
-    // Win32 mask: white = keep background (transparent), black = opaque
+    // Win32 mask: white = opaque sprite, black = transparent background
     for (let i = 0; i < imgData.data.length; i += 4) {
       const maskR = maskData.data[i];
-      imgData.data[i + 3] = maskR > 128 ? 0 : 255;
+      imgData.data[i + 3] = maskR > 128 ? 255 : 0;
     }
 
     ctx.putImageData(imgData, 0, 0);

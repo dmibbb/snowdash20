@@ -22,7 +22,7 @@ body {
 
 canvas#game {
   width: 800px;
-  height: 600px;
+  height: 560px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: #2c3e50;

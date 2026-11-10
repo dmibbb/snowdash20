@@ -1,10 +1,18 @@
 import './style.css';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
-import { initInput, getDirection, consumePause, consumeMute } from './input/input';
+import {
+  initInput,
+  getDirection,
+  consumePause,
+  consumeMute,
+  getMousePosition,
+  consumeClick,
+} from './input/input';
+import { isPointInRect } from './render/button';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
-import { drawPauseOverlay } from './render/overlays';
+import { drawPauseOverlay, PAUSE_MENU_BUTTON } from './render/overlays';
 import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
@@ -87,15 +95,18 @@ async function main(): Promise<void> {
   }
 
   let paused = false;
+  let hoverPauseMenu = false;
 
   machine.register('playing', {
     onEnter: () => {
       paused = false;
+      hoverPauseMenu = false;
       consumePause();
       audio.playMusic(2);
     },
     onExit: () => {
       paused = false;
+      audio.setPaused(false); // Ensure audio is unpaused if exiting while paused
       audio.stopMusic();
     },
     tick: () => {
@@ -104,7 +115,20 @@ async function main(): Promise<void> {
         audio.setPaused(paused);
         return;
       }
-      if (paused) return;
+
+      if (paused) {
+        const mouse = getMousePosition();
+        hoverPauseMenu = mouse ? isPointInRect(mouse, PAUSE_MENU_BUTTON) : false;
+
+        const click = consumeClick();
+        if (click && isPointInRect(click, PAUSE_MENU_BUTTON)) {
+          audio.stopAllSfx();
+          audio.playSfx(31); // Menu click
+          machine.setMode('menu');
+        }
+        return;
+      }
+
       game?.tick(getDirection());
       if (game?.isGameOver) {
         machine.setMode('gameover');
@@ -112,7 +136,7 @@ async function main(): Promise<void> {
     },
     render: (c) => {
       if (game) renderGame(c, game);
-      if (paused) drawPauseOverlay(c);
+      if (paused) drawPauseOverlay(c, hoverPauseMenu);
     },
   });
 

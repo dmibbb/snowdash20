@@ -11,6 +11,7 @@ export class Player {
   y: number;
   state: 'idle' | 'moving' = 'idle';
   direction: Direction = 'down';
+  private animTick = 0;
 
   private readonly startCol: number;
   private readonly startRow: number;
@@ -33,6 +34,7 @@ export class Player {
     this.targetY = this.y;
     this.state = 'idle';
     this.direction = 'down';
+    this.animTick = 0;
   }
 
   getCell(): CellCoords {
@@ -113,6 +115,12 @@ export class Player {
         this.state = 'idle';
       }
     }
+
+    if (this.state === 'moving') {
+      this.animTick += 1;
+    } else {
+      this.animTick = 0;
+    }
   }
 
   private consumeCurrentTile(level: Level, game: Game): void {
@@ -159,5 +167,14 @@ export class Player {
       default:
         return c;
     }
+  }
+
+  getSpriteKey(): string {
+    const dir = this.direction === 'stop' ? 'd' : this.direction[0];
+    if (this.state === 'moving') {
+      const frame = (Math.floor(this.animTick / 3) % 3) + 1;
+      return `p_${dir}_${frame}`;
+    }
+    return `p_${dir}_1`;
   }
 }

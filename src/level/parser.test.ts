@@ -91,4 +91,13 @@ describe('parseLevel', () => {
     expect(r.grid[3][4]).toBe('empty');
     expect(r.grid[3][7]).toBe('empty');
   });
+
+  it('accepts original lowercase + hyphen format', () => {
+    const lines = VALID_LEVEL.split('\n').map((l) => l.toLowerCase().replace(/\./g, '-'));
+    const r = parseLevel(lines.join('\n'));
+    expect(r.grid.length).toBe(13);
+    expect(r.grid[0][0]).toBe('wall');
+    expect(r.grid[1][1]).toBe('empty');
+    expect(r.start).toEqual({ col: 8, row: 7 });
+  });
 });

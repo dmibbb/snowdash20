@@ -11,7 +11,7 @@ const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
 const BACK_BUTTON: ButtonRect = {
   x: CANVAS_WIDTH / 2 - 130,
-  y: FIELD_HEIGHT / 2 + 120,
+  y: FIELD_HEIGHT / 2 + 110,
   w: 260,
   h: 56,
 };

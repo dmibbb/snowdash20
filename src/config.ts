@@ -1,11 +1,11 @@
-export const DEBUG_TILE_LABELS = true; // TODO: set to false in phase 8 when real sprites arrive
+export const DEBUG_TILE_LABELS = false;
 
 export const CANVAS_WIDTH = 800;
-export const CANVAS_HEIGHT = 600;
+export const CANVAS_HEIGHT = 560;
 export const TILE_SIZE = 40;
 export const GRID_COLS = 20;
 export const GRID_ROWS = 13;
-export const HUD_HEIGHT = 80;
+export const HUD_HEIGHT = 40;
 
 export const TICK_MS = 50;
 

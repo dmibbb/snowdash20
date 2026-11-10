@@ -3,21 +3,9 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
 import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
 import { audio } from '../audio/audio';
+import { assets } from '../assets/loader';
 
-const HELP_TEXT = [
-  'Santa Claus has lost all his presents for children!',
-  'You must collect all gifts with the help of snowball Mr. Snejok.',
-  "All presents scattered on all vicinity around the Mr. Snejok's house.",
-  'Your hero is able to break courses through snow to himself, forming after him an ice surface.',
-  'Mr. Snejok can push ahead of himself huge snow boulders that help him on his way but only one!',
-  'Be careful! There are spiteful monsters have penetrated on your territory.',
-  'They will kill you on your meeting!',
-  'Then your hero will lose all gifts and he should collect them again.',
-  'There are huge boulders that can kill Mr. Snejok if they fall down.',
-  'However you can kill dangerous monsters by pushing down huge boulders on them.',
-].join(' ');
-
-const BACK_BUTTON: ButtonRect = { x: 20, y: 540, w: 150, h: 42 };
+const BACK_BUTTON: ButtonRect = { x: 0, y: 510, w: 100, h: 50 };
 
 export interface HelpCallbacks {
   onBack: () => void;
@@ -50,10 +38,21 @@ export function createHelp(callbacks: HelpCallbacks): ModeHooks {
       }
     },
     render: (ctx) => {
-      drawBackground(ctx);
-      drawTitle(ctx);
-      drawWrappedText(ctx, HELP_TEXT, 40, 130, CANVAS_WIDTH - 80, 22);
-      drawButton(ctx, BACK_BUTTON, 'Main Menu', hovered, 16);
+      const bg = assets.get('Help_back');
+      if (bg) {
+        ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      } else {
+        drawBackground(ctx);
+        drawTitle(ctx);
+        drawWrappedText(ctx, 'Help text placeholder...', 40, 130, CANVAS_WIDTH - 80, 22);
+      }
+
+      const btnImg = assets.get(hovered ? 'main_menu_2' : 'main_menu');
+      if (btnImg) {
+        ctx.drawImage(btnImg, BACK_BUTTON.x, BACK_BUTTON.y, BACK_BUTTON.w, BACK_BUTTON.h);
+      } else {
+        drawButton(ctx, BACK_BUTTON, 'Main Menu', hovered, 16);
+      }
     },
   };
 }

@@ -3,9 +3,9 @@
 > Живой документ. Обновляется после каждой фазы.
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
-> **Последнее обновление:** 2026-11-10
-> **Текущая фаза:** 10 — Real Assets
-> **Следующая фаза:** 11 — Tests, Polish, Deploy
+> **Последнее обновление:** 2026-11-11
+> **Текущая фаза:** 11 — Tests, Polish, Deploy
+> **Следующая фаза:** 12 — Known issues
 
 ---
 
@@ -22,8 +22,8 @@
 | 7   | Game State & Progression | ✅ Done        | 2026-11-10 |
 | 8   | UI — HUD, Pause, Modes   | ✅ Done        | 2026-11-10 |
 | 9   | Sound                    | ✅ Done        | 2026-11-10 |
-| 10  | Real Assets              | 🔄 in progress |            |
-| 11  | Tests, Polish, Deploy    | ⏸ not started  |            |
+| 10  | Real Assets              | ✅ Done        | 2026-11-11 |
+| 11  | Tests, Polish, Deploy    | 🔄 in progress |            |
 
 Легенда: ⏸ not started · 🔄 in progress · ✅ done · ⚠️ blocked
 
@@ -39,6 +39,8 @@ src/
 ├── config.ts      — все игровые константы
 ├── types.ts       — Direction, GameMode, TileType, Point, CellCoords
 ├── style.css      — центрирование canvas 1:1, image-rendering: pixelated
+├── assets/
+│   └── loader.ts  — AssetsManager (синглтон assets): preload BMP + масок в ImageBitmap
 ├── audio/
 │   └── audio.ts   — AudioManager (синглтон audio): preload, unlock, playMusic, stopMusic, playSfx (stub), toggleMute, setPaused
 ├── input/
@@ -71,14 +73,22 @@ src/
 
 ```
 public/
-└── levels/
-    ├── level_list.txt  — список путей к уровням (level01/02/03)
-    ├── level01.txt     — тестовый уровень: стены, снег, сундуки, 4 камня, 1 амеба, 1 спайкер
-    ├── level02.txt     — простой тест перехода: 2 сундука + 1 амеба
-    └── level03.txt     — простой тест перехода: 2 сундука + камень + спайкер
+├── levels/
+│   ├── level_list.txt  — список путей к уровням (level01/02/03)
+│   ├── 01.lvl
+│   ├── ...
+│   └── 09.lvl
+├── sounds/
+│   ├── music/
+│   │   ├── 01..04.mp3 - музыка
+│   └── sfx/
+│       └── 11..38.mp3 - звуковые эффекты
+└── sprites/
+    ├── manifests/
+    │   ├── monsterImages.txt - спрайты монстров (как в оригинале)
+    │   └── playerImages.txt - спрайты игрока (как в оригинале)
+    └── *.bmp - картинки, спрайты
 ```
-
-Ассеты (спрайты, звук) — появятся в фазах 9–10. Пока используются плейсхолдеры.
 
 ---
 
@@ -193,6 +203,7 @@ class Player {
   getCell(): CellCoords
   resetToStart(): void
   update(inputDir: Direction | null, level: Level, game: Game, stones: Stone[], monsters: Monster[]): void
+  getSpriteKey(): string
 }
 ```
 
@@ -229,6 +240,7 @@ class Monster {
   getCell(): CellCoords
   reset(): void
   update(level: Level, stones: Stone[], monsters: Monster[]): void
+  getSpriteKey(): string
 }
 ```
 
@@ -310,141 +322,45 @@ class AudioManager {
 export const audio: AudioManager
 ```
 
+### Assets
+
+```
+// assets/loader.ts
+type Sprite = ImageBitmap
+class AssetsManager {
+  loadAll(): Promise<void>
+  get(name: string): Sprite | undefined
+}
+export const assets: AssetsManager
+```
+
 ---
 
 ## 4. Принятые решения и отклонения от SPEC
 
 > Всё, что SPEC не оговаривает или оговорено двусмысленно — фиксируется здесь. Это защищает от «AI каждый раз решает по-своему».
 
-### Placeholder-и (пока нет реальных PNG)
+### Ассеты и Рендер (фаза 10)
 
-- **Игрок:** `#3498db` (синий)
-- **Стена:** `#7f8c8d` (серый)
-- **Снег:** `#ecf0f1` (почти белый)
-- **Сундук:** `#f1c40f` (жёлтый)
-- **Камень:** `#34495e` (тёмно-серый)
-- **Монстр:** `#e74c3c` (красный)
-- **Фон поля:** `#2c3e50`
-- **HUD:** `#4a4a4a` + белая линия сверху
-
-### UI
-
-- Меню, Help, About, Game Over — **canvas-кнопки** (`ctx.fillRect` + текст), обработка кликов по координатам. НЕ HTML.
-
-### Аудио
-
-- **AudioManager** (`src/audio/audio.ts`, синглтон `audio`). Предзагрузка всех mp3 при старте (`void audio.preload()`, без await). Пути: `/sounds/music/{01..04}.mp3`, `/sounds/sfx/{id}.mp3`. Список ID: `MUSIC_IDS = [1,2,3,4]`, `SFX_IDS = [11..23, 26..34, 35, 36, 38]` (24, 25, 37 — нет в оригинале). При ошибке загрузки — `console.warn`, промис резолвится, игра продолжается.
-- **Музыка.** `HTMLAudioElement` в Map по id. Плейлист: `MUSIC_NEXT = { 1:1, 2:3, 3:4, 4:2 }`. Трек 01 зациклен через `audio.loop = true`. Остальные — через `onended` → `playMusic(next)`.
-- **По режимам:**
-  - `Menu.onEnter` → `audio.playMusic(1)`
-  - `GameOver.onEnter` → `audio.playMusic(1)`
-  - `Playing.onEnter` → `audio.playMusic(2)`, `Playing.onExit` → `audio.stopMusic()`
-  - `Help` — наследует 01 от Menu, ничего не трогает
-  - `Intro` — в текущей реализации беззвучное (autoplay), целевое — с треком 01 после splash screen (см. раздел 7)- **Autoplay unlock.** На первом `keydown`/`mousedown`/`touchstart` — `audio.unlock()`: проигрывает трек 01 с `volume = 0`, ставит на паузу, `currentTime = 0`, восстанавливает `volume`. После этого браузер разрешает `play()`. В `main.ts` три слушателя снимаются после первого срабатывания.
-- **Mute.** Клавиша M в любом режиме → `consumeMute()` в `main.ts` (перед `machine.tick()`) → `audio.toggleMute()`. При mute: `volume = 0` для музыки + все активные SFX `pause()` + `playSfx` early return. При unmute — музыка возвращает `volume = 1`, новые SFX снова играют.
-- **Пауза.** `Playing` при Esc/P → `audio.setPaused(paused)`. При паузе: музыка `pause()`, все SFX `pause()` + `currentTime = 0`, `playSfx` early return. При снятии: только музыка `play()`, SFX не возобновляются (короткие, сыграют заново на следующих событиях).
-- **SFX** `playSfx(id)` — one-shot (один экземпляр на файл; повторный вызов обрывает предыдущий `currentTime = 0`). `playSfxCyclic(from, to)` — циклический счётчик, хранится в `cyclicIndices: Map<string, number>` (ключ `"12-19"`). После `to` счётчик сбрасывается на `from`. Используется для снега (33-34), сундука (12-19), enemy die (20-23), hero die (26-29 — фикс бага оригинала: оригинал не сбрасывал счётчик и молчал после 29).
-- **Фаза 9 завершена (9.5).** Весь звуковой флоу проверен в полном цикле: Intro → Menu → Playing → GameOver → Menu → Playing. Все 25 SFX из таблицы 13.2 играют. Mute работает на музыку и SFX. Пауза останавливает и музыку, и SFX. Autoplay unlock с retry (слушатели не снимаются, пока `unlock()` не вернёт `true`).
-
-- **Точки вызова SFX (7 файлов):**
-  - `Player.consumeCurrentTile` → 33/34 (снег), 12-19 (сундук)
-  - `Stone.tryPush` → 32, сбрасывает `hasFallSoundPlayed`
-  - `Stone.tryStartFallingOrRolling` → 36 (при первом `canFall`), 35 (при приземлении, `hasFallSoundPlayed && !canFallNow`)
-  - `Game.onPlayerHit` → 26-29 (hero die циклически)
-  - `Game.tick` (stone→monster) → 20-23 (enemy die циклически)
-  - `Game.tick` (milestone, `while (score >= nextMilestone)`) → 11, `nextMilestone += 250`
-  - `Game.onLevelComplete` → 30
-  - `modes/menu` → 31 (клики), 29 (Exit)
-  - `modes/help` → 31
-  - `modes/gameover` → 38 (onEnter), 31 (Back to Menu)
-
-- **Известное ограничение SFX (HTMLAudioElement).** Один экземпляр `Audio` на файл — повторный вызов обрывает предыдущий. В оригинале (FMOD) звуки шли на разных каналах и накладывались. Если при плейтесте это будет мешать — можно добавить пул из 3 инстансов на файл в фазе 11. Пока не делаем.
-- **GameOver audio (9.5a).** На переходе Playing → GameOver музыка Playing останавливается (`Playing.onExit` → `audio.stopMusic()`). `GameOver.onEnter` не запускает музыку — только SFX 38 «Your Score». Ничего не накладывается. На GameOver overlay звучит только 38, если он уже отыграл — тишина. При клике Back to Menu — `audio.stopAllSfx()` (обрывает 38, если ещё играл) + `audio.playSfx(31)` → Menu, где `Menu.onEnter` запускает трек 01.
+- **Загрузка в память.** Скрипт `assets/loader.ts` грузит BMP файлы через `Image`, применяет маску (Win32: белый = opaque, черный = transparent) и сохраняет в `ImageBitmap`. Никаких предварительных конвертаций в PNG — всё делается на лету в браузере.
+- **Маски.** BMP файлы грузятся как есть, маска накладывается в `loadMasked`. Если маски нет (фолбэк) — картинка грузится без прозрачности.
+- **Разрешение.** Жёстко 800×560 (поле 520 + HUD 40). CSS `width: 800px`, никаких растягиваний и пикселизации.
+- **HUD.** Полоса `score_bar` (760×40) центрируется по X=20. Иконки `p_d_1` идут с шагом 20px. Цифры и лейблы — реальные спрайты.
+- **Интро.** Заменено на реальные картинки `R, G, B, team, prezents` на фоне `intro.bmp`. Сдвинуто на 20px вверх для красоты.
+- **Меню.** Полностью на спрайтах (`back_menu`, кнопки `Lets_go`, `about`, `help`, `exit` + `_2` на hover).
+- **Help.** Заменён на картинку `Help_back`, кнопка "Main Menu" осталась текстовой.
+- **Pause.** Спрайт `pause.bmp` (320×100), кнопка "Back to Menu" текстовая.
+- **Game Over.** Спрайт `gameover.bmp`, кнопка "Back to Menu" текстовая.
+- **DEBUG_TILE_LABELS.** Установлен в `false`, буквы B/S/C/K/P/M/U отключены.
 
 ### Отклонения от оригинала
 
-- **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
-- **Пауза** — в оригинале при Pause музыку/SFX приглушали (`SetPause` в FMOD). У нас — `audio.setPaused(true)`: текущий трек `pause()`, все активные SFX `pause()` + `currentTime = 0`, `playSfx` early return. При снятии: музыка `play()`, SFX не возобновляются (короткие, сыграют заново на следующих событиях).
-- **Player заблокирован `falling`-камнем (AABB, не getCell).** Попытка войти в клетку, пиксельно перекрытую падающим камнем, блокируется. Проверка идёт по AABB камня и целевой клетки, а не через `findStoneAt` — `getCell()` округляет, и камень «середине падения» может логически быть уже в следующей клетке, физически занимая часть текущей. В оригинале игрок мог войти и умереть — мы блокируем как UX-улучшение.
-
-### Скорости
-
-- Пересчитаны под фиксированный тик 20 Hz (оригинал был на `Sleep(10)` с переменным dt).
-- `PLAYER_SPEED = 5`, `MONSTER_SPEED = 3`, `STONE_FALL_SPEED = 8`, `STONE_PUSH_SPEED = 5`.
-- Могут быть уточнены после плейтеста в фазе 5–6.
-
-### Парсер уровня
-
-- Пустые строки и `\r` отбрасываются — защита от copy-paste артефактов.
-- BOM срезается.
-- Если `fetch` вернул HTML (Vite SPA fallback при 404) — `main.ts` кидает понятную ошибку, а не пытается парсить HTML.
-- В случае ошибки парсер выводит все увиденные строки — упрощает диагностику «не то количество строк».
-
-### Canvas
-
-- Отображается 1:1 (800×600), без масштабирования.
-- Адаптивность — в фазе 11, если понадобится.
-
-### Прочее
-
-- Снег/сундук «съедаются» на каждом Idle-тике. Логика в Player.consumeCurrentTile(), вызывается из Player.update() при state === 'idle', до проверки ввода. Это соответствует поведению оригинала: PossibleDirection вызывается каждый Idle-тик, независимо от нажатой клавиши. Игрок наступил на клетку → на следующем тике снег/сундук уже исчез.
-- Debug-буквы на тайлах. DEBUG_TILE_LABELS = true в config.ts. Поверх каждого тайла рисуется буква из формата уровня (B/S/C/P), чтобы отличать тайлы при отладке. Отключить в фазе 8, когда появятся спрайты.
-- HUD — временный текст. В фазе 4 HUD показывает Score: и Chests: текстом через ctx.fillText (шрифт 20px monospace). В фазе 8 заменим на спрайтовые цифры.
-- ctx.textAlign — сбрасывается вручную. После drawLabel (где textAlign = 'center') HUD-текст явно ставит textAlign = 'left'. Иначе координаты HUD-текста уезжают.
-- Снег/сундук держат камень (фикс из фазы 5)
-- Скатывание только с камня + проверки hasStoneAt/игрок.
-- Толкание с follow
-- Level.reset() при смерти — восстанавливает тайлы, score сохраняется
-- pushed используется и для push игроком, и для rolling
-- **Толкание переопределяет гравитацию.** `tryPush` не проверяет `canFall`: пока камень `pushed` — он катится горизонтально, даже если под ним пусто. Гравитация включается, только когда игрок отпускает клавишу (камень становится `idle`, `tryStartFallingOrRolling` роняет его). Соответствует оригиналу.
-- **Game владеет уровнями.** `Game` получает `levelPaths` и `fetchLevel` в конструкторе. `loadLevel` асинхронный, `loading`-флаг блокирует tick во время загрузки. `onLevelComplete` инкрементит `levelIndex`, при `nextIndex >= levelPaths.length` ставит `isGameOver = true`.
-- **Reset vs Reload при смерти.** При `onPlayerHit` с `lives > 0` вызывается `resetLevel()` — та же сцена, все сущности на стартовых позициях, `Level.reset()` восстанавливает тайлы и `chestsCount`. Уровень НЕ перезагружается с диска. `score` сохраняется.
-- **HUD в фазе 7 — текстовый.** `Lives: N`, `Score: N`, `Level: N` через `ctx.fillText`. В фазе 8 заменяется на спрайтовые цифры/иконки.
-- **GameOver-оверлей.** При `isGameOver === true` поверх поля рисуется `rgba(0,0,0,0.75)` + `GAME OVER` + `Score: N` + `Rating: <getRating(levelIndex)>`.
-- **FSM (8.1).** `ModeMachine` в `game/modeMachine.ts`. `main.ts` регистрирует все режимы (intro, menu, help, playing, gameover), `machine.setMode('intro')` при старте. `Playing` содержит всю игровую логику; остальные — `ModeHooks` с опциональными `tick`/`render`/`onEnter`/`onExit`.
-- **Input — continuous + edge-triggered.** `getDirection()` и `getMousePosition()` — continuous (читают текущее состояние). `consumeConfirm/Pause/Mute/Click/AnyKey` — edge: накапливают событие и сбрасывают при вызове. Нормировка кликов через `getBoundingClientRect`.
-- **HUD вынесен в `render/hud.ts` (8.2).** Визуально без изменений. В фазе 10 заменим текст на спрайты.
-- **Пауза (8.3).** Esc/P в `Playing` — toggle `paused`. `tick()` при `paused` не вызывает `game.tick()`. `onEnter` сбрасывает `pendingPause`, чтобы не «съесть» нажатие из предыдущего режима. Оверлей — `drawPauseOverlay`.
-- **Menu (8.4).** Кнопки-плейсхолдеры: рамка + monospace-текст. В фазе 10 — PNG, если найдётся комиксовый шрифт; иначе останется текст. Hover — жёлтая рамка и жёлтый текст. About/Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новый `Game` (score=0, lives=4, level=1). Enter в Menu = Start.
-- **Help (8.5).** Отдельный GameMode. Тёмный градиентный фон (плейсхолдер). Word-wrap длинного текста (10 предложений оригинала). Кнопка Main Menu → Menu. Esc/Enter → Menu.
-- **Intro (8.6).** Полная анимация R/G/B/Team/Presents. Скорости ×2 от оригинала (~7.7s vs 15.4s). Скип по любой клавише/клику (`consumeAnyKey`/`consumeClick`) → сразу Menu. Авто-переход через 500мс после того, как все элементы встали. Известная мелочь: композиция слегка съехала влево (правим в фазе 10). В фазе 8 — текст, в фазе 10 — PNG.
-- **GameOver (8.7).** Полноценный GameMode (не оверлей внутри Playing). При `game.isGameOver` в `Playing.tick` — `setMode('gameover')`. Оверлей: тёмный экран поля, «GAME OVER», счёт, рейтинг, кнопка Back to Menu. HUD внизу виден. Клик/Enter/Esc → Menu. `game` остаётся как есть; при следующем Start из Menu создаётся новый.
-- **Полный цикл:** `Intro (скип) → Menu → Playing → (GameOver | конец уровней) → GameOver → Menu → Playing → ...`. Замыкается без F5.
-
-### Монстры и проходимость
-
-- Монстр ходит **только по клеткам `empty`**. Стены, **видимый снег, видимый сундук**, камни, другие монстры и край карты — все блокируют. Соответствует `Monster::PossibleDirection` в оригинале (`Snow` / `Chest` с `Visible()` → return false).
-- После того как игрок съел снег/сундук (клетка стала `empty`), монстр может пройти по этой клетке.
-- Монстр выбирает случайное доступное направление только при блокировке; иначе продолжает движение в текущем.
-
-### Игрок → Монстр
-
-- Если игрок пытается войти в клетку с живым монстром → `game.onPlayerHit` → рестарт уровня.
-- Если монстр наступает на игрока (AABB) → то же самое.
-- Поведение соответствует оригиналу (в оригинале игрок тоже умирал при попытке войти в клетку монстра — через AABB-проверку в следующем тике).
-
-### Камень ↔ Снег/Сундук (fix, важно)
-
-- Снег и сундук **держат камень** как опору: `Stone.isCellFree` использует `level.getCell() === 'empty'`, **не** `isPassable()`. Соответствует `Object::Empty() == !visible` в оригинале.
-- Когда игрок съедает снег/сундук → клетка становится `empty` → камень теряет опору и падает на игрока (если он под ним).
-
-### Монстры — цвет плейсхолдеров (debug)
-
-- Модель 1 (Амёба): `#e74c3c` (красный), буква `M`
-- Модель 2 (Спайкер): `#e67e22` (оранжевый), буква `U`
-
-### Экраны меню (фаза 8)
-
-- **Menu → Playing = новая игра.** `Game` пересоздаётся (score=0, lives=4, levelIndex=0).
-- **Exit** — не закрывает окно (браузер), показывает модальный оверлей «Thanks for playing!». Звук — Hero Die (id уточним в фазе 9).
-- **About** — модальный оверлей поверх Menu с текстом из оригинала (RGB Team / SnowDash v1.0 / 2 Dash or not 2 Dash / (c) 2006). Не отдельный GameMode.
-- **Help** — отдельный GameMode с текстом (см. SPEC 12.1) и кнопкой Main Menu.
-- **Intro** — полная анимация R/G/B/Team/Presents по координатам и скоростям оригинала. Скип по любой клавише/клику. Авто-переход ~3 сек (не 15, как в оригинале — сократили для UX).
-- **Ассеты меню пока нет** — в фазе 8 рисуем плейсхолдеры: фон-градиент, кнопки-текст в рамках, Help-текст через `ctx.fillText`. Замена на PNG (`IDB_START`, `IDB_ABOUT`, `IDB_HELP`, `IDB_EXIT`, зимний фон) — в фазе 10.
-- **DEBUG_TILE_LABELS** — оставляем `true` до фазы 10.
-- **Menu (8.4).** `createMenu` возвращает `ModeHooks`. Кнопки — плейсхолдеры (рамка + текст), в фазе 10 заменятся на PNG. Координаты: Let's Go! (60,505,140,65), About (240,505), Help! (420,505), Exit (600,505). Hover — жёлтая рамка. About и Exit — модальные оверлеи (не отдельные режимы), закрываются кликом/Enter/Esc. Start → новая `Game`. Enter = Start (без модалки). Esc в Menu = Start (короткий путь).
-- **Help (8.5).** Отдельный GameMode. Фон — тёмный градиент (заглушка), заголовок «Help!» синим, 10 предложений оригинала с word-wrap, кнопка Main Menu внизу слева. Esc/Enter/клик по кнопке → Menu.
-- **Intro (8.6).** Полная анимация R/G/B/Team/Presents. Позиции и скорости в ELEMENTS_DEF. Скорости ×2 от оригинала (~7.7s vs 15.4s) — чтобы не ждать. Скип по любой клавише/клику через consumeAnyKey/consumeClick → сразу Menu. Авто-переход через 500мс после того, как все элементы встали. Известная мелочь: композиция слегка съехала влево (правим в фазе 10).
+- **Hero die счётчик** — 26→27→28→29→26 (фикс бага).
+- **Пауза** — `setPaused(true)` останавливает и музыку, и SFX.
+- **Player заблокирован `falling`-камнем** — AABB-проверка, блокировка движения.
+- **SFX** — один `HTMLAudioElement` на файл, обрывает сам себя при частом вызове.
+- **GameOver audio** — музыка останавливается, играет только SFX 38.
+- **Парсер** — поддерживает lowercase + дефис (оригинальный формат уровней).
 
 ---
 
@@ -454,17 +370,10 @@ export const audio: AudioManager
 
 ### Изображения (спрайты)
 
-| Что                    | Где                             | Статус                     |
-| ---------------------- | ------------------------------- | -------------------------- |
-| Player (12 PNG)        | `public/sprites/player/`        | ⏸ ждёт скрипта конвертации |
-| Monster тип 1 (12 PNG) | `public/sprites/monster1/`      | ⏸                          |
-| Monster тип 2 (12 PNG) | `public/sprites/monster2/`      | ⏸                          |
-| Stone                  | `public/sprites/stone.png`      | ⏸                          |
-| Wall / Snow / Chest    | `public/sprites/*.png`          | ⏸                          |
-| Background             | `public/sprites/background.png` | ⏸                          |
-| HUD (цифры, надписи)   | `public/sprites/hud/`           | ⏸                          |
-
-**Исходники BMP:** ⏸ путь к папке оригинала не зафиксирован.
+| Что         | Где                              | Статус                                        |
+| ----------- | -------------------------------- | --------------------------------------------- |
+| Все спрайты | `public/sprites/*.bmp`           | ✅ BMP скопированы, маски применяются на лету |
+| Манифесты   | `public/sprites/manifests/*.txt` | ✅ На месте                                   |
 
 ### Звук
 
@@ -499,32 +408,28 @@ public/
 
 ### Уровни
 
-| Что             | Где                            | Статус                                 |
-| --------------- | ------------------------------ | -------------------------------------- |
-| level01.txt     | `public/levels/level01.txt`    | ✅ (стены, снег, сундуки, камни, M, U) |
-| level02.txt     | `public/levels/level02.txt`    | ✅ (2 сундука, M)                      |
-| level03.txt     | `public/levels/level03.txt`    | ✅ (2 сундука, K, U)                   |
-| level_list.txt  | `public/levels/level_list.txt` | ✅ (3 пути)                            |
-| level04..10.txt | —                              | ⏸ фаза 10                              |
+| Что            | Где                                          | Статус            |
+| -------------- | -------------------------------------------- | ----------------- |
+| level_list.txt | `public/levels/level_list.txt`               | ✅                |
+| 0..9.lvl       | `public/levels/0.lvl`..`public/levels/9.lvl` | ✅ (из оригинала) |
 
 ---
 
 ## 6. Как запустить
 
+```
 npm install
 npm run dev — dev-сервер на http://localhost:5173
 npm run build — прод-сборка в dist/
 npm run preview — локальный просмотр прод-сборки
 npm test — юнит-тесты (Vitest)
+```
 
 ---
 
 ## 7. Известные проблемы / TODO
 
-> Всё, что сломано, работает не так или отложено.
-
-- **Intro беззвучное (временная мера).** Autoplay заблокирован до первого user gesture. В следующей итерации — splash screen с кнопкой Start перед Intro, после которого Intro играет с треком 01. Это вернёт поведение оригинала (SPEC 13.1). См. `Tasks.md` → «Пост-фаза 11: Splash screen».
-- **SFX обрывают друг друга.** Один `HTMLAudioElement` на файл. Если нужен overlap (например, снег каждые 400мс + сундук одновременно), в фазе 11 добавим пул из 3 инстансов на SFX (~30 строк в `AudioManager`).
+> Все баги и улучшения для следующей итерации перенесены в `Tasks.md` → «Фаза 12: Известные проблемы и улучшения». Там же splash screen, горизонтальный спайкер, RIP-снежок, пауза с итогами уровня и т.д.
 
 ---
 

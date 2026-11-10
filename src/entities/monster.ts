@@ -14,6 +14,8 @@ export class Monster {
   direction: Direction = 'down';
   readonly model: MonsterModel;
   killed = false;
+  private animTick = 0;
+  private lastH = 'l';
 
   private readonly startCol: number;
   private readonly startRow: number;
@@ -38,6 +40,8 @@ export class Monster {
     this.state = 'idle';
     this.direction = 'down';
     this.killed = false;
+    this.animTick = 0;
+    this.lastH = 'l';
   }
 
   getCell(): CellCoords {
@@ -80,6 +84,15 @@ export class Monster {
       if (this.x === this.targetX && this.y === this.targetY) {
         this.state = 'idle';
       }
+
+      if (this.direction === 'left') this.lastH = 'l';
+      if (this.direction === 'right') this.lastH = 'r';
+
+      if (this.state === 'moving') {
+        this.animTick += 1;
+      } else {
+        this.animTick = 0;
+      }
     }
   }
 
@@ -109,6 +122,16 @@ export class Monster {
     }
 
     return true;
+  }
+
+  getSpriteKey(): string {
+    const frame = this.state === 'moving' ? (Math.floor(this.animTick / 3) % 2) + 1 : 1;
+
+    if (this.model === 1) {
+      const d = this.direction === 'stop' ? 'd' : this.direction[0];
+      return `ameba_${d}_${frame}`;
+    }
+    return `spiker_${this.lastH}_${frame}`;
   }
 
   private deltaOf(direction: Direction): { dc: number; dr: number } {

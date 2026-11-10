@@ -1,11 +1,10 @@
 import type { ModeHooks } from '../game/modeMachine';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
 import { consumeAnyKey, consumeClick } from '../input/input';
+import { assets } from '../assets/loader';
 
 interface IntroElement {
-  label: string;
-  fontSize: number;
-  color: string;
+  key: string;
   startX: number;
   startY: number;
   targetX: number;
@@ -13,59 +12,12 @@ interface IntroElement {
   speed: number;
 }
 
-// Start positions match the original Snow Dash.cpp; speeds are ×2 to keep
-// total animation ~7.7s instead of ~15.4s (user didn't want to wait 15s).
 const ELEMENTS_DEF: IntroElement[] = [
-  {
-    label: 'R',
-    fontSize: 110,
-    color: '#e74c3c',
-    startX: -480,
-    startY: 40,
-    targetX: 200,
-    targetY: 40,
-    speed: 10,
-  },
-  {
-    label: 'G',
-    fontSize: 110,
-    color: '#2ecc71',
-    startX: 323,
-    startY: -380,
-    targetX: 323,
-    targetY: 40,
-    speed: 6,
-  },
-  {
-    label: 'B',
-    fontSize: 110,
-    color: '#3498db',
-    startX: 1100,
-    startY: 40,
-    targetX: 480,
-    targetY: 40,
-    speed: 10,
-  },
-  {
-    label: 'Team',
-    fontSize: 72,
-    color: '#ecf0f1',
-    startX: 275,
-    startY: 1000,
-    targetX: 275,
-    targetY: 450,
-    speed: 6,
-  },
-  {
-    label: 'Presents',
-    fontSize: 40,
-    color: '#f39c12',
-    startX: 2300,
-    startY: 300,
-    targetX: 150,
-    targetY: 300,
-    speed: 14,
-  },
+  { key: 'R', startX: -480, startY: 65, targetX: 200, targetY: 65, speed: 5 },
+  { key: 'G', startX: 323, startY: -400, targetX: 323, targetY: 65, speed: 3 },
+  { key: 'B', startX: 1100, startY: 65, targetX: 480, targetY: 65, speed: 5 },
+  { key: 'team', startX: 275, startY: 980, targetX: 275, targetY: 430, speed: 3 },
+  { key: 'prezents', startX: 2300, startY: 280, targetX: 150, targetY: 280, speed: 7 },
 ];
 
 interface RuntimeElement extends IntroElement {
@@ -86,7 +38,7 @@ export function createIntro(callbacks: IntroCallbacks): ModeHooks {
     settled: false,
   }));
   let settledTicks = 0;
-  const SETTLE_DELAY_TICKS = 10; // 500ms
+  const SETTLE_DELAY_TICKS = 10; // 500ms pause after all elements land
 
   function reset(): void {
     for (let i = 0; i < elements.length; i++) {
@@ -140,24 +92,29 @@ export function createIntro(callbacks: IntroCallbacks): ModeHooks {
       }
     },
     render: (ctx) => {
-      // Placeholder background — will be replaced with PNG in phase 10
-      const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-      grad.addColorStop(0, '#0a0a20');
-      grad.addColorStop(1, '#000010');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      // Background
+      const bg = assets.get('intro');
+      if (bg) {
+        ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+        grad.addColorStop(0, '#0a0a20');
+        grad.addColorStop(1, '#000010');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      }
 
+      // Elements (R, G, B, Team, Presents)
       for (const el of elements) {
-        ctx.font = `bold ${el.fontSize}px monospace`;
-        ctx.fillStyle = el.color;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText(el.label, el.x, el.y);
+        const img = assets.get(el.key);
+        if (img) {
+          ctx.drawImage(img, el.x, el.y);
+        }
       }
 
       // Skip hint
-      ctx.fillStyle = 'rgba(236, 240, 241, 0.45)';
-      ctx.font = '14px monospace';
+      ctx.fillStyle = '#0000FF';
+      ctx.font = 'bold 16px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillText('Press any key to skip', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 12);

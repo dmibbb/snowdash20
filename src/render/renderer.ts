@@ -2,6 +2,7 @@ import type { TileType } from '../types';
 import type { Game } from '../game/game';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, GRID_ROWS, DEBUG_TILE_LABELS } from '../config';
 import { renderHud } from './hud';
+import { assets } from '../assets/loader';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -11,6 +12,15 @@ const TILE_COLORS: Record<TileType, string> = {
   chest: '#f1c40f',
   empty: '#2c3e50',
 };
+
+const TILE_SPRITE_KEY: Record<TileType, string | null> = {
+  wall: 'block',
+  snow: 'snow',
+  chest: 'chest',
+  empty: null,
+};
+
+let bgPattern: CanvasPattern | null = null;
 
 const TILE_LETTERS: Record<TileType, string> = {
   wall: 'B',
@@ -59,6 +69,16 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
     return;
   }
 
+  // Tiled background over the field
+  const bg = assets.get('background');
+  if (bg) {
+    if (!bgPattern) bgPattern = ctx.createPattern(bg, 'repeat');
+    if (bgPattern) {
+      ctx.fillStyle = bgPattern;
+      ctx.fillRect(0, 0, CANVAS_WIDTH, FIELD_HEIGHT);
+    }
+  }
+
   // Visual cell grid — TODO: remove in final release
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
@@ -83,8 +103,14 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
       const tile = game.level.getCell(col, row);
       if (tile === 'empty') continue;
 
-      ctx.fillStyle = TILE_COLORS[tile];
-      ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      const key = TILE_SPRITE_KEY[tile];
+      const sprite = key ? assets.get(key) : undefined;
+      if (sprite) {
+        ctx.drawImage(sprite, col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      } else {
+        ctx.fillStyle = TILE_COLORS[tile];
+        ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
 
       if (DEBUG_TILE_LABELS) {
         const letter = TILE_LETTERS[tile];
@@ -97,8 +123,14 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
 
   // Stones
   for (const stone of game.stones) {
-    ctx.fillStyle = '#34495e';
-    ctx.fillRect(stone.x, stone.y, TILE_SIZE, TILE_SIZE);
+    const stoneSprite = assets.get('snowball');
+    if (stoneSprite) {
+      ctx.drawImage(stoneSprite, stone.x, stone.y, TILE_SIZE, TILE_SIZE);
+    } else {
+      ctx.fillStyle = '#34495e';
+      ctx.fillRect(stone.x, stone.y, TILE_SIZE, TILE_SIZE);
+    }
+
     if (DEBUG_TILE_LABELS) {
       drawLabel(
         ctx,
@@ -113,8 +145,14 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
   // Monsters
   for (const monster of game.monsters) {
     if (monster.killed) continue;
-    ctx.fillStyle = MONSTER_COLORS[monster.model];
-    ctx.fillRect(monster.x, monster.y, TILE_SIZE, TILE_SIZE);
+
+    const sprite = assets.get(monster.getSpriteKey());
+    if (sprite) {
+      ctx.drawImage(sprite, monster.x, monster.y, TILE_SIZE, TILE_SIZE);
+    } else {
+      ctx.fillStyle = MONSTER_COLORS[monster.model];
+      ctx.fillRect(monster.x, monster.y, TILE_SIZE, TILE_SIZE);
+    }
     if (DEBUG_TILE_LABELS) {
       drawLabel(
         ctx,
@@ -128,8 +166,13 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
   renderHud(ctx, game);
 
   // Player
-  ctx.fillStyle = '#3498db';
-  ctx.fillRect(game.player.x, game.player.y, TILE_SIZE, TILE_SIZE);
+  const playerSprite = assets.get(game.player.getSpriteKey());
+  if (playerSprite) {
+    ctx.drawImage(playerSprite, game.player.x, game.player.y, TILE_SIZE, TILE_SIZE);
+  } else {
+    ctx.fillStyle = '#3498db';
+    ctx.fillRect(game.player.x, game.player.y, TILE_SIZE, TILE_SIZE);
+  }
   if (DEBUG_TILE_LABELS) {
     drawLabel(ctx, 'P', game.player.x + TILE_SIZE / 2, game.player.y + TILE_SIZE / 2);
   }

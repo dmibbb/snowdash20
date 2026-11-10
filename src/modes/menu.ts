@@ -4,12 +4,13 @@ import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { drawAboutOverlay, drawExitOverlay } from '../render/overlays';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
 import { audio } from '../audio/audio';
+import { assets } from '../assets/loader';
 
 const BUTTONS = {
-  start: { x: 60, y: 505, w: 140, h: 65 },
-  about: { x: 240, y: 505, w: 140, h: 65 },
-  help: { x: 420, y: 505, w: 140, h: 65 },
-  exit: { x: 600, y: 505, w: 140, h: 65 },
+  start: { x: 175, y: 510, w: 100, h: 50 },
+  about: { x: 315, y: 510, w: 100, h: 50 },
+  help: { x: 455, y: 510, w: 100, h: 50 },
+  exit: { x: 595, y: 510, w: 100, h: 50 },
 } as const satisfies Record<string, ButtonRect>;
 
 type ButtonKey = keyof typeof BUTTONS;
@@ -35,7 +36,6 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
     onEnter: () => {
       hovered = null;
       modal = 'none';
-      // Drop stale edge-triggered events from a previous mode
       consumeClick();
       consumeConfirm();
       consumePause();
@@ -50,7 +50,7 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
 
       if (modal !== 'none') {
         if (click || confirm || pause) {
-          audio.playSfx(31); // Menu click
+          audio.playSfx(31);
           modal = 'none';
         }
         return;
@@ -70,22 +70,48 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
           else if (btn === 'about') modal = 'about';
           else if (btn === 'help') callbacks.onHelp();
           else if (btn === 'exit') {
-            audio.playSfx(29); // Hero Die 4 — farewell on Exit
+            audio.playSfx(29);
             modal = 'exit';
           }
         }
       }
     },
     render: (ctx) => {
-      drawMenuBackground(ctx);
-      drawTitle(ctx);
-      drawButtons(ctx, hovered);
-      drawTeamLogo(ctx);
+      // Background
+      const bg = assets.get('back_menu');
+      if (bg) {
+        ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      } else {
+        drawMenuBackground(ctx);
+      }
+
+      // Buttons with real sprites (normal + hover)
+      drawImageButton(ctx, BUTTONS.start, 'Lets_go', 'Lets_go_2', hovered === 'start');
+      drawImageButton(ctx, BUTTONS.about, 'about', 'about_2', hovered === 'about');
+      drawImageButton(ctx, BUTTONS.help, 'help', 'help_2', hovered === 'help');
+      drawImageButton(ctx, BUTTONS.exit, 'exit', 'exit_2', hovered === 'exit');
 
       if (modal === 'about') drawAboutOverlay(ctx);
       else if (modal === 'exit') drawExitOverlay(ctx);
     },
   };
+}
+
+// Helper to draw sprite button with fallback
+function drawImageButton(
+  ctx: CanvasRenderingContext2D,
+  rect: ButtonRect,
+  normalKey: string,
+  hoverKey: string,
+  hover: boolean,
+) {
+  const key = hover ? hoverKey : normalKey;
+  const img = assets.get(key);
+  if (img) {
+    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h);
+  } else {
+    drawButton(ctx, rect, normalKey, hover);
+  }
 }
 
 function drawMenuBackground(ctx: CanvasRenderingContext2D): void {
@@ -95,32 +121,4 @@ function drawMenuBackground(ctx: CanvasRenderingContext2D): void {
   grad.addColorStop(1, '#8ba9c4');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-}
-
-function drawTitle(ctx: CanvasRenderingContext2D): void {
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const cx = CANVAS_WIDTH / 2;
-
-  ctx.fillStyle = 'rgba(0, 100, 200, 0.5)';
-  ctx.font = 'bold 96px monospace';
-  ctx.fillText('SnowDash', cx + 4, 124);
-
-  ctx.fillStyle = '#4a8ed8';
-  ctx.fillText('SnowDash', cx, 120);
-}
-
-function drawButtons(ctx: CanvasRenderingContext2D, hovered: ButtonKey | null): void {
-  drawButton(ctx, BUTTONS.start, "Let's Go!", hovered === 'start');
-  drawButton(ctx, BUTTONS.about, 'About', hovered === 'about');
-  drawButton(ctx, BUTTONS.help, 'Help!', hovered === 'help');
-  drawButton(ctx, BUTTONS.exit, 'Exit', hovered === 'exit');
-}
-
-function drawTeamLogo(ctx: CanvasRenderingContext2D): void {
-  ctx.fillStyle = '#ecf0f1';
-  ctx.font = 'bold 20px monospace';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('RGB Team', 20, CANVAS_HEIGHT - 22);
 }
