@@ -10,6 +10,7 @@ import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
 import { createGameOver } from './modes/gameover';
 import { audio } from './audio/audio';
+import { assets } from './assets/loader';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -54,6 +55,8 @@ async function loadLevelFile(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
+  void assets.loadAll();
+
   // Fire-and-forget audio preload — files load while Intro runs.
   // Intentionally NOT awaited: no progress bar yet, and autoplay is
   // blocked until user interacts anyway.
