@@ -3,6 +3,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
 import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { drawAboutOverlay, drawExitOverlay } from '../render/overlays';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
+import { audio } from '../audio/audio';
 
 const BUTTONS = {
   start: { x: 60, y: 505, w: 140, h: 65 },
@@ -49,22 +50,30 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
 
       if (modal !== 'none') {
         if (click || confirm || pause) {
+          audio.playSfx(31); // Menu click
           modal = 'none';
         }
         return;
       }
 
       if (confirm) {
+        audio.playSfx(31);
         callbacks.onStart();
         return;
       }
 
       if (click) {
         const btn = findHoveredButton(click);
-        if (btn === 'start') callbacks.onStart();
-        else if (btn === 'about') modal = 'about';
-        else if (btn === 'help') callbacks.onHelp();
-        else if (btn === 'exit') modal = 'exit';
+        if (btn) {
+          audio.playSfx(31);
+          if (btn === 'start') callbacks.onStart();
+          else if (btn === 'about') modal = 'about';
+          else if (btn === 'help') callbacks.onHelp();
+          else if (btn === 'exit') {
+            audio.playSfx(29); // Hero Die 4 — farewell on Exit
+            modal = 'exit';
+          }
+        }
       }
     },
     render: (ctx) => {

@@ -4,8 +4,8 @@
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
 > **Последнее обновление:** 2026-11-10
-> **Текущая фаза:** 9 — Sound
-> **Следующая фаза:** 10 — Real Assets
+> **Текущая фаза:** 10 — Real Assets
+> **Следующая фаза:** 11 — Tests, Polish, Deploy
 
 ---
 
@@ -21,8 +21,8 @@
 | 6   | Monsters                 | ✅ Done        | 2026-11-09 |
 | 7   | Game State & Progression | ✅ Done        | 2026-11-10 |
 | 8   | UI — HUD, Pause, Modes   | ✅ Done        | 2026-11-10 |
-| 9   | Sound                    | 🔄 in progress |            |
-| 10  | Real Assets              | ⏸ not started  |            |
+| 9   | Sound                    | ✅ Done        | 2026-11-10 |
+| 10  | Real Assets              | 🔄 in progress |            |
 | 11  | Tests, Polish, Deploy    | ⏸ not started  |            |
 
 Легенда: ⏸ not started · 🔄 in progress · ✅ done · ⚠️ blocked
@@ -297,10 +297,12 @@ class AudioManager {
   get isPaused(): boolean
 
   preload(): Promise<void>
-  unlock(): Promise<void>
+  unlock(): Promise<boolean>       // true → слушатели можно снимать
   playMusic(id: number): void
   stopMusic(): void
-  playSfx(id: number): void       // TODO 9.3
+  playSfx(id: number): void        // one-shot; early return if muted/paused
+  playSfxCyclic(from: number, to: number): void  // 12→19→12, 26→29→26, etc.
+  stopAllSfx(): void               // останавливает все SFX (для GameOver → Back)
   toggleMute(): void
   setPaused(paused: boolean): void
 }
@@ -332,7 +334,6 @@ export const audio: AudioManager
 ### Аудио
 
 - **AudioManager** (`src/audio/audio.ts`, синглтон `audio`). Предзагрузка всех mp3 при старте (`void audio.preload()`, без await). Пути: `/sounds/music/{01..04}.mp3`, `/sounds/sfx/{id}.mp3`. Список ID: `MUSIC_IDS = [1,2,3,4]`, `SFX_IDS = [11..23, 26..34, 35, 36, 38]` (24, 25, 37 — нет в оригинале). При ошибке загрузки — `console.warn`, промис резолвится, игра продолжается.
-- **Музыка.** `HTMLAudioElement` в Map по id. Плейлист: `MUSIC_NEXT = { 1:1, 2:3, 3:4, 4:2 }`. Трек 01 зациклен через `audio.loop = true`. Остальные — через `onended` → `playMusic(next)`. `Playing.onEnter` → `audio.playMusic(2)`, `Playing.onExit` → `audio.stopMusic()`, `Menu.onEnter` и `GameOver.onEnter` → `audio.playMusic(1)`.
 - **Музыка.** `HTMLAudioElement` в Map по id. Плейлист: `MUSIC_NEXT = { 1:1, 2:3, 3:4, 4:2 }`. Трек 01 зациклен через `audio.loop = true`. Остальные — через `onended` → `playMusic(next)`.
 - **По режимам:**
   - `Menu.onEnter` → `audio.playMusic(1)`
@@ -340,14 +341,30 @@ export const audio: AudioManager
   - `Playing.onEnter` → `audio.playMusic(2)`, `Playing.onExit` → `audio.stopMusic()`
   - `Help` — наследует 01 от Menu, ничего не трогает
   - `Intro` — в текущей реализации беззвучное (autoplay), целевое — с треком 01 после splash screen (см. раздел 7)- **Autoplay unlock.** На первом `keydown`/`mousedown`/`touchstart` — `audio.unlock()`: проигрывает трек 01 с `volume = 0`, ставит на паузу, `currentTime = 0`, восстанавливает `volume`. После этого браузер разрешает `play()`. В `main.ts` три слушателя снимаются после первого срабатывания.
-- **Mute.** Клавиша M в любом режиме → `consumeMute()` в `main.ts` (перед `machine.tick()`) → `audio.toggleMute()`. Регулирует `volume` текущей музыки. SFX — добавятся в 9.3.
-- **Пауза.** `Playing` при Esc/P → `audio.setPaused(paused)`: `pause()` / `play()` текущего трека. SFX не глушатся (9.4).
-- **SFX.** Пока `playSfx()` — stub. Реализация в 9.3.
+- **Mute.** Клавиша M в любом режиме → `consumeMute()` в `main.ts` (перед `machine.tick()`) → `audio.toggleMute()`. При mute: `volume = 0` для музыки + все активные SFX `pause()` + `playSfx` early return. При unmute — музыка возвращает `volume = 1`, новые SFX снова играют.
+- **Пауза.** `Playing` при Esc/P → `audio.setPaused(paused)`. При паузе: музыка `pause()`, все SFX `pause()` + `currentTime = 0`, `playSfx` early return. При снятии: только музыка `play()`, SFX не возобновляются (короткие, сыграют заново на следующих событиях).
+- **SFX** `playSfx(id)` — one-shot (один экземпляр на файл; повторный вызов обрывает предыдущий `currentTime = 0`). `playSfxCyclic(from, to)` — циклический счётчик, хранится в `cyclicIndices: Map<string, number>` (ключ `"12-19"`). После `to` счётчик сбрасывается на `from`. Используется для снега (33-34), сундука (12-19), enemy die (20-23), hero die (26-29 — фикс бага оригинала: оригинал не сбрасывал счётчик и молчал после 29).
+- **Фаза 9 завершена (9.5).** Весь звуковой флоу проверен в полном цикле: Intro → Menu → Playing → GameOver → Menu → Playing. Все 25 SFX из таблицы 13.2 играют. Mute работает на музыку и SFX. Пауза останавливает и музыку, и SFX. Autoplay unlock с retry (слушатели не снимаются, пока `unlock()` не вернёт `true`).
+
+- **Точки вызова SFX (7 файлов):**
+  - `Player.consumeCurrentTile` → 33/34 (снег), 12-19 (сундук)
+  - `Stone.tryPush` → 32, сбрасывает `hasFallSoundPlayed`
+  - `Stone.tryStartFallingOrRolling` → 36 (при первом `canFall`), 35 (при приземлении, `hasFallSoundPlayed && !canFallNow`)
+  - `Game.onPlayerHit` → 26-29 (hero die циклически)
+  - `Game.tick` (stone→monster) → 20-23 (enemy die циклически)
+  - `Game.tick` (milestone, `while (score >= nextMilestone)`) → 11, `nextMilestone += 250`
+  - `Game.onLevelComplete` → 30
+  - `modes/menu` → 31 (клики), 29 (Exit)
+  - `modes/help` → 31
+  - `modes/gameover` → 38 (onEnter), 31 (Back to Menu)
+
+- **Известное ограничение SFX (HTMLAudioElement).** Один экземпляр `Audio` на файл — повторный вызов обрывает предыдущий. В оригинале (FMOD) звуки шли на разных каналах и накладывались. Если при плейтесте это будет мешать — можно добавить пул из 3 инстансов на файл в фазе 11. Пока не делаем.
+- **GameOver audio (9.5a).** На переходе Playing → GameOver музыка Playing останавливается (`Playing.onExit` → `audio.stopMusic()`). `GameOver.onEnter` не запускает музыку — только SFX 38 «Your Score». Ничего не накладывается. На GameOver overlay звучит только 38, если он уже отыграл — тишина. При клике Back to Menu — `audio.stopAllSfx()` (обрывает 38, если ещё играл) + `audio.playSfx(31)` → Menu, где `Menu.onEnter` запускает трек 01.
 
 ### Отклонения от оригинала
 
 - **Hero die счётчик** — в оригинале не сбрасывался (баг, тишина после 29). У нас: 26→27→28→29→26 (фикс, SPEC 13.2).
-- **Пауза** — в оригинале при Pause музыку/SFX приглушали (`SetPause` в FMOD). У нас — `audio.setPaused(true)`: текущий трек ставится на паузу (`current.pause()`), при снятии — `current.play()`. SFX не глушатся (SFX-pause — в 9.4).
+- **Пауза** — в оригинале при Pause музыку/SFX приглушали (`SetPause` в FMOD). У нас — `audio.setPaused(true)`: текущий трек `pause()`, все активные SFX `pause()` + `currentTime = 0`, `playSfx` early return. При снятии: музыка `play()`, SFX не возобновляются (короткие, сыграют заново на следующих событиях).
 - **Player заблокирован `falling`-камнем (AABB, не getCell).** Попытка войти в клетку, пиксельно перекрытую падающим камнем, блокируется. Проверка идёт по AABB камня и целевой клетки, а не через `findStoneAt` — `getCell()` округляет, и камень «середине падения» может логически быть уже в следующей клетке, физически занимая часть текущей. В оригинале игрок мог войти и умереть — мы блокируем как UX-улучшение.
 
 ### Скорости
@@ -506,7 +523,8 @@ npm test — юнит-тесты (Vitest)
 
 > Всё, что сломано, работает не так или отложено.
 
-- **Intro беззвучное (временная мера).** Autoplay заблокирован до первого user gesture. В следующей итерации — splash screen с кнопкой Start перед Intro, после которого Intro играет с треком 01. Это вернёт поведение оригинала (SPEC 13.1).
+- **Intro беззвучное (временная мера).** Autoplay заблокирован до первого user gesture. В следующей итерации — splash screen с кнопкой Start перед Intro, после которого Intro играет с треком 01. Это вернёт поведение оригинала (SPEC 13.1). См. `Tasks.md` → «Пост-фаза 11: Splash screen».
+- **SFX обрывают друг друга.** Один `HTMLAudioElement` на файл. Если нужен overlap (например, снег каждые 400мс + сундук одновременно), в фазе 11 добавим пул из 3 инстансов на SFX (~30 строк в `AudioManager`).
 
 ---
 

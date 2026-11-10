@@ -2,6 +2,7 @@ import type { ModeHooks } from '../game/modeMachine';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
 import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
+import { audio } from '../audio/audio';
 
 const HELP_TEXT = [
   'Santa Claus has lost all his presents for children!',
@@ -37,12 +38,14 @@ export function createHelp(callbacks: HelpCallbacks): ModeHooks {
       hovered = mouse ? isPointInRect(mouse, BACK_BUTTON) : false;
 
       if (consumeConfirm() || consumePause()) {
+        audio.playSfx(31);
         callbacks.onBack();
         return;
       }
 
       const click = consumeClick();
       if (click && isPointInRect(click, BACK_BUTTON)) {
+        audio.playSfx(31);
         callbacks.onBack();
       }
     },

@@ -2,6 +2,7 @@ import type { CellCoords, Direction } from '../types';
 import type { Level } from '../level/level';
 import type { Player } from './player';
 import { TILE_SIZE, STONE_FALL_SPEED, STONE_PUSH_SPEED } from '../config';
+import { audio } from '../audio/audio';
 
 export type StoneState = 'idle' | 'falling' | 'pushed';
 
@@ -9,6 +10,7 @@ export class Stone {
   x: number;
   y: number;
   state: StoneState = 'idle';
+  private hasFallSoundPlayed = false;
 
   private targetX: number;
   private targetY: number;
@@ -28,6 +30,7 @@ export class Stone {
     this.targetX = this.startX;
     this.targetY = this.startY;
     this.state = 'idle';
+    this.hasFallSoundPlayed = false;
   }
 
   getCell(): CellCoords {
@@ -67,14 +70,27 @@ export class Stone {
     this.state = 'pushed';
     this.targetX = targetCol * TILE_SIZE;
     this.targetY = targetRow * TILE_SIZE;
+    this.hasFallSoundPlayed = false;
+    audio.playSfx(32);
     return true;
   }
 
   private tryStartFallingOrRolling(level: Level, stones: Stone[], player: Player | null): void {
     const cell = this.getCell();
+    const canFallNow = this.canFall(level, stones);
+
+    // Detect the end of a continuous fall: we were falling, and now nothing's below.
+    if (this.hasFallSoundPlayed && !canFallNow) {
+      audio.playSfx(35); // Stone Falled
+      this.hasFallSoundPlayed = false;
+    }
 
     // 1. Fall straight down if the cell below is free
-    if (this.canFall(level, stones)) {
+    if (canFallNow) {
+      if (!this.hasFallSoundPlayed) {
+        audio.playSfx(36); // Stone Falling
+        this.hasFallSoundPlayed = true;
+      }
       this.state = 'falling';
       this.targetX = this.x;
       this.targetY = this.y + TILE_SIZE;

@@ -5,6 +5,7 @@ import { Monster } from '../entities/monster';
 import { Level } from '../level/level';
 import { parseLevel } from '../level/parser';
 import { TILE_SIZE, START_LIVES, LEVEL_BONUS, MONSTER1_POINTS, MONSTER2_POINTS } from '../config';
+import { audio } from '../audio/audio';
 
 export type LevelFetcher = (path: string) => Promise<string>;
 
@@ -20,6 +21,7 @@ export class Game {
   isGameOver = false;
 
   private loading = false;
+  private nextMilestone = 250;
   private readonly levelPaths: string[];
   private readonly fetchLevel: LevelFetcher;
 
@@ -96,8 +98,15 @@ export class Game {
         if (this.overlaps(s, m)) {
           m.killed = true;
           this.score += m.model === 1 ? MONSTER1_POINTS : MONSTER2_POINTS;
+          audio.playSfxCyclic(20, 23); // Enemy Die
         }
       }
+    }
+
+    // 250-points milestone — plays once per crossing
+    while (this.score >= this.nextMilestone) {
+      audio.playSfx(11); // 250 Points
+      this.nextMilestone += 250;
     }
 
     if (this.visibleChests === 0) {
@@ -107,6 +116,7 @@ export class Game {
 
   // Called externally (from Player when it walks into a monster, and internally).
   onPlayerHit(): void {
+    audio.playSfxCyclic(26, 29); // Hero Die (cyclic, fixes original bug)
     this.lives -= 1;
     if (this.lives <= 0) {
       this.isGameOver = true;
@@ -116,6 +126,7 @@ export class Game {
   }
 
   private onLevelComplete(): void {
+    audio.playSfx(30); // Level Done
     this.score += LEVEL_BONUS;
     const nextIndex = this.levelIndex + 1;
     if (nextIndex >= this.levelPaths.length) {

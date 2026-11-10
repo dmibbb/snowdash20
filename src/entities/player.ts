@@ -4,6 +4,7 @@ import type { Game } from '../game/game';
 import type { Stone } from './stone';
 import type { Monster } from './monster';
 import { TILE_SIZE, PLAYER_SPEED, CHEST_POINTS } from '../config';
+import { audio } from '../audio/audio';
 
 export class Player {
   x: number;
@@ -120,10 +121,12 @@ export class Player {
 
     if (tile === 'snow') {
       level.setCell(cell.col, cell.row, 'empty');
+      audio.playSfxCyclic(33, 34);
     } else if (tile === 'chest') {
       level.setCell(cell.col, cell.row, 'empty');
       game.score += CHEST_POINTS;
       game.visibleChests -= 1;
+      audio.playSfxCyclic(12, 19);
     }
   }
 

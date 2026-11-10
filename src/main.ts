@@ -26,10 +26,12 @@ initInput(canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 // Unlock autoplay on first user gesture (keydown, mouse, touch)
 const unlockAudio = (): void => {
-  void audio.unlock();
-  window.removeEventListener('keydown', unlockAudio);
-  canvas.removeEventListener('mousedown', unlockAudio);
-  canvas.removeEventListener('touchstart', unlockAudio);
+  void audio.unlock().then((ok) => {
+    if (!ok) return; // keep listeners — retry on next gesture
+    window.removeEventListener('keydown', unlockAudio);
+    canvas.removeEventListener('mousedown', unlockAudio);
+    canvas.removeEventListener('touchstart', unlockAudio);
+  });
 };
 
 window.addEventListener('keydown', unlockAudio);
@@ -145,19 +147,15 @@ async function main(): Promise<void> {
     }),
   );
 
-  const gameoverBase = createGameOver({
-    getGame: () => game,
-    onBack: () => {
-      machine.setMode('menu');
-    },
-  });
-  machine.register('gameover', {
-    ...gameoverBase,
-    onEnter: () => {
-      gameoverBase.onEnter?.();
-      audio.playMusic(1);
-    },
-  });
+  machine.register(
+    'gameover',
+    createGameOver({
+      getGame: () => game,
+      onBack: () => {
+        machine.setMode('menu');
+      },
+    }),
+  );
 
   machine.setMode('intro');
 

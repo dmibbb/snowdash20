@@ -5,6 +5,7 @@ import { drawGameOverOverlay } from '../render/overlays';
 import { render as renderGame } from '../render/renderer';
 import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
+import { audio } from '../audio/audio';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
@@ -29,18 +30,23 @@ export function createGameOver(callbacks: GameOverCallbacks): ModeHooks {
       consumeClick();
       consumeConfirm();
       consumePause();
+      audio.playSfx(38); // Your Score
     },
     tick: () => {
       const mouse = getMousePosition();
       hovered = mouse ? isPointInRect(mouse, BACK_BUTTON) : false;
 
       if (consumeConfirm() || consumePause()) {
+        audio.stopAllSfx();
+        audio.playSfx(31);
         callbacks.onBack();
         return;
       }
 
       const click = consumeClick();
       if (click && isPointInRect(click, BACK_BUTTON)) {
+        audio.stopAllSfx();
+        audio.playSfx(31);
         callbacks.onBack();
       }
     },

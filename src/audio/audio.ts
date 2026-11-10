@@ -20,6 +20,8 @@ class AudioManager {
   private paused = false;
   private unlocked = false;
   private currentMusicId: number | null = null;
+  private pendingMusicId: number | null = null;
+  private cyclicIndices = new Map<string, number>();
 
   get isMuted(): boolean {
     return this.muted;
@@ -72,13 +74,13 @@ class AudioManager {
 
   // Try to "warm up" the audio pipeline from a user gesture so that
   // subsequent .play() calls (outside the gesture) are allowed by the browser.
-  async unlock(): Promise<void> {
-    if (this.unlocked) return;
+  async unlock(): Promise<boolean> {
+    if (this.unlocked) return true;
 
     const first = this.music.get(1);
     if (!first) {
       console.warn('[Audio] unlock: track 01 not loaded');
-      return;
+      return false;
     }
 
     try {
@@ -89,8 +91,15 @@ class AudioManager {
       first.volume = this.muted ? 0 : 1;
       this.unlocked = true;
       console.log('[Audio] unlocked');
+      if (this.pendingMusicId !== null) {
+        const id = this.pendingMusicId;
+        this.pendingMusicId = null;
+        this.playMusic(id);
+      }
+      return true;
     } catch (err) {
       console.warn('[Audio] unlock failed', err);
+      return false;
     }
   }
 
@@ -103,10 +112,8 @@ class AudioManager {
       return;
     }
 
-    // Already playing this track — do nothing
     if (this.currentMusicId === id) return;
 
-    // Stop current
     if (this.currentMusicId !== null) {
       const current = this.music.get(this.currentMusicId);
       if (current) {
@@ -118,19 +125,21 @@ class AudioManager {
 
     this.currentMusicId = id;
     target.volume = this.muted ? 0 : 1;
-    target.loop = id === 1; // track 01 loops itself; others chain via onended
+    target.loop = id === 1;
     target.onended = () => {
       const nextId = MUSIC_NEXT[id];
       if (nextId !== undefined && nextId !== id) {
-        this.currentMusicId = null; // force re-entry
+        this.currentMusicId = null;
         this.playMusic(nextId);
       }
     };
 
-    if (this.paused) return; // will be resumed by setPaused(false)
+    if (this.paused) return;
 
     target.play().catch((err) => {
-      // Autoplay may be blocked before user interaction — that's fine.
+      if (!this.unlocked) {
+        this.pendingMusicId = id;
+      }
       console.warn(`[Audio] playMusic(${id}) rejected:`, err);
     });
   }
@@ -146,10 +155,42 @@ class AudioManager {
     this.currentMusicId = null;
   }
 
-  // === SFX — implemented in 9.3 ===
+  // === SFX ===
 
-  playSfx(_id: number): void {
-    // TODO 9.3
+  playSfx(id: number): void {
+    if (this.muted) return;
+    if (this.paused) return;
+
+    const sound = this.sfx.get(id);
+    if (!sound) {
+      console.warn(`[Audio] playSfx(${id}): not loaded`);
+      return;
+    }
+
+    // Restart from beginning (simple overlap handling — one instance per SFX)
+    sound.currentTime = 0;
+    sound.play().catch((err) => {
+      console.warn(`[Audio] playSfx(${id}) rejected:`, err);
+    });
+  }
+
+  // Cycles through [from, to] inclusive. Counter is per-range, persists across calls.
+  // Examples: playSfxCyclic(12, 19) → 12,13,...,19,12,13,...
+  //           playSfxCyclic(26, 29) → 26,27,28,29,26,... (fixes original bug where
+  //           counter stuck at 30 and hero die went silent)
+  playSfxCyclic(from: number, to: number): void {
+    const key = `${from}-${to}`;
+    const current = this.cyclicIndices.get(key) ?? from;
+    this.playSfx(current);
+    const next = current >= to ? from : current + 1;
+    this.cyclicIndices.set(key, next);
+  }
+
+  stopAllSfx(): void {
+    for (const s of this.sfx.values()) {
+      s.pause();
+      s.currentTime = 0;
+    }
   }
 
   // === Mute / Pause ===
@@ -162,7 +203,15 @@ class AudioManager {
       const current = this.music.get(this.currentMusicId);
       if (current) current.volume = volume;
     }
-    // SFX volume — handled in 9.3
+
+    if (this.muted) {
+      // Stop any playing SFX immediately
+      for (const s of this.sfx.values()) {
+        s.pause();
+        s.currentTime = 0;
+      }
+    }
+
     console.log(`[Audio] muted=${this.muted}`);
   }
 
@@ -170,16 +219,29 @@ class AudioManager {
     if (this.paused === paused) return;
     this.paused = paused;
 
-    if (this.currentMusicId === null) return;
-    const current = this.music.get(this.currentMusicId);
-    if (!current) return;
+    // Music: pause / resume
+    if (this.currentMusicId !== null) {
+      const current = this.music.get(this.currentMusicId);
+      if (current) {
+        if (paused) {
+          current.pause();
+        } else {
+          current.play().catch((err) => {
+            console.warn('[Audio] resume rejected:', err);
+          });
+        }
+      }
+    }
 
+    // SFX: stop on pause. Don't resume on unpause — they're short, will replay
+    // fresh on the next event.
     if (paused) {
-      current.pause();
-    } else {
-      current.play().catch((err) => {
-        console.warn('[Audio] resume rejected:', err);
-      });
+      for (const s of this.sfx.values()) {
+        if (!s.paused) {
+          s.pause();
+          s.currentTime = 0;
+        }
+      }
     }
   }
 }
