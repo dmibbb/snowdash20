@@ -16,19 +16,23 @@ export function drawButton(
   hover: boolean,
   fontSize = 22,
 ): void {
-  // Fill — placeholder until phase 10 (original used graffiti PNGs)
-  ctx.fillStyle = hover ? '#5a3fa8' : '#3a2a6a';
-  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + rect.h / 2;
 
-  // Border
-  ctx.strokeStyle = hover ? '#ffd700' : '#8a7ac0';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(rect.x + 1.5, rect.y + 1.5, rect.w - 3, rect.h - 3);
-
-  // Label
-  ctx.fillStyle = hover ? '#ffd700' : '#ecf0f1';
-  ctx.font = `bold ${fontSize}px monospace`;
+  ctx.save();
+  ctx.font = `bold ${fontSize}px Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, rect.x + rect.w / 2, rect.y + rect.h / 2);
+  ctx.lineJoin = 'round';
+
+  // Cyan outline — brighter/thicker on hover for feedback
+  ctx.lineWidth = hover ? 2.5 : 2;
+  ctx.strokeStyle = hover ? '#00ffff' : '#00aaff';
+  ctx.strokeText(label, cx, cy);
+
+  // Deep navy fill — same as About/Exit hints
+  ctx.fillStyle = hover ? '#0a0a8a' : '#1a1a6a';
+  ctx.fillText(label, cx, cy);
+
+  ctx.restore();
 }

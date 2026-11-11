@@ -4,14 +4,25 @@ import { getRating } from '../game/rating';
 import { assets } from '../assets/loader';
 import { drawButton, type ButtonRect } from './button';
 
-export const PAUSE_MENU_BUTTON: ButtonRect = {
+export const PAUSE_RESTART_BUTTON: ButtonRect = {
   x: CANVAS_WIDTH / 2 - 100,
   y: (GRID_ROWS * TILE_SIZE) / 2 + 80,
   w: 200,
   h: 50,
 };
 
-export function drawPauseOverlay(ctx: CanvasRenderingContext2D, hoveredMenuBtn: boolean): void {
+export const PAUSE_MENU_BUTTON: ButtonRect = {
+  x: CANVAS_WIDTH / 2 - 100,
+  y: (GRID_ROWS * TILE_SIZE) / 2 + 140,
+  w: 200,
+  h: 50,
+};
+
+export function drawPauseOverlay(
+  ctx: CanvasRenderingContext2D,
+  hoveredRestartBtn: boolean,
+  hoveredMenuBtn: boolean,
+): void {
   const fieldHeight = GRID_ROWS * TILE_SIZE;
   const centerY = fieldHeight / 2;
 
@@ -40,8 +51,8 @@ export function drawPauseOverlay(ctx: CanvasRenderingContext2D, hoveredMenuBtn: 
   ctx.font = '16px monospace';
   ctx.fillText('Press Esc or P to resume', CANVAS_WIDTH / 2, centerY + 40);
 
-  // Main Menu button
-  drawButton(ctx, PAUSE_MENU_BUTTON, 'Back to Menu', hoveredMenuBtn, 20);
+  drawButton(ctx, PAUSE_RESTART_BUTTON, '[ Restart Level ]', hoveredRestartBtn, 20);
+  drawButton(ctx, PAUSE_MENU_BUTTON, '[ Back to Main Menu ]', hoveredMenuBtn, 20);
 }
 
 function drawModalFrame(ctx: CanvasRenderingContext2D): void {
@@ -59,6 +70,25 @@ function drawModalFrame(ctx: CanvasRenderingContext2D): void {
   ctx.strokeStyle = '#4a8ed8';
   ctx.lineWidth = 3;
   ctx.strokeRect(boxX + 1.5, boxY + 1.5, boxW - 3, boxH - 3);
+}
+
+function drawHintText(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: number): void {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 18px monospace';
+  ctx.lineJoin = 'round';
+
+  // Single thin cyan outline — barely there, just enough to lift the text off the dark modal
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#00aaff';
+  ctx.strokeText(text, cx, cy);
+
+  // Deep navy fill
+  ctx.fillStyle = '#0a0a8a';
+  ctx.fillText(text, cx, cy);
+
+  ctx.restore();
 }
 
 interface TextSegment {
@@ -148,9 +178,7 @@ export function drawAboutOverlay(ctx: CanvasRenderingContext2D): void {
   );
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffd700';
-  ctx.font = '18px monospace';
-  ctx.fillText('[ OK — click or press Enter ]', cx, 390);
+  drawHintText(ctx, '[ OK — click or press Enter ]', cx, 390);
 }
 
 export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
@@ -168,9 +196,7 @@ export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
   ctx.font = '18px monospace';
   ctx.fillText('See you in the next SnowDash', cx, cy + 30);
 
-  ctx.fillStyle = '#ffd700';
-  ctx.font = '18px monospace';
-  ctx.fillText('[ Quit — click or press Enter ]', cx, cy + 90);
+  drawHintText(ctx, '[ Quit — click or press Enter ]', cx, cy + 90);
 }
 
 export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
@@ -215,9 +241,7 @@ export function drawLevelCompleteOverlay(ctx: CanvasRenderingContext2D, game: Ga
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 36px monospace';
-  ctx.fillText('Congratulations!', cx, cy - 90);
+  drawGlowingText(ctx, 'Congratulations!', cx, cy - 90, 36);
 
   ctx.fillStyle = '#ecf0f1';
   ctx.font = 'bold 28px monospace';
@@ -234,4 +258,63 @@ export function drawLevelCompleteOverlay(ctx: CanvasRenderingContext2D, game: Ga
     cx,
     fieldHeight - 30,
   );
+}
+
+export function drawLevelTitleOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
+  if (!game.level) return;
+
+  const fieldHeight = GRID_ROWS * TILE_SIZE;
+  const cx = CANVAS_WIDTH / 2;
+  const cy = fieldHeight / 2;
+
+  // Semi-transparent band across the middle
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.fillRect(0, cy - 55, CANVAS_WIDTH, 110);
+
+  const levelNum = game.levelIndex + 1;
+  const title = game.level.name ? `LEVEL ${levelNum}: ${game.level.name}` : `LEVEL ${levelNum}`;
+
+  drawGlowingText(ctx, title, cx, cy, 32);
+}
+
+// Deep-navy fill with cyan outer glow
+export function drawGlowingText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  cx: number,
+  cy: number,
+  fontSize: number,
+): void {
+  const savedFont = ctx.font;
+  const savedAlign = ctx.textAlign;
+  const savedBaseline = ctx.textBaseline;
+
+  ctx.font = `bold ${fontSize}px Impact, 'Arial Black', 'Segoe UI Black', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.miterLimit = 2;
+
+  // Outer dim cyan halo
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = 'rgba(0, 170, 255, 0.35)';
+  ctx.strokeText(text, cx, cy);
+
+  // Mid cyan halo
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(0, 221, 255, 0.65)';
+  ctx.strokeText(text, cx, cy);
+
+  // Tight bright cyan rim
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#00ffff';
+  ctx.strokeText(text, cx, cy);
+
+  // Deep navy fill
+  ctx.fillStyle = '#0a0a8a';
+  ctx.fillText(text, cx, cy);
+
+  ctx.font = savedFont;
+  ctx.textAlign = savedAlign;
+  ctx.textBaseline = savedBaseline;
 }

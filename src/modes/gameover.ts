@@ -67,7 +67,7 @@ export function createGameOver(callbacks: GameOverCallbacks): ModeHooks {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.fillRect(0, FIELD_HEIGHT, CANVAS_WIDTH, HUD_HEIGHT);
 
-      drawButton(ctx, BACK_BUTTON, 'Back to Menu', hovered, 20);
+      drawButton(ctx, BACK_BUTTON, '[ Back to Main Menu ]', hovered, 20);
     },
   };
 }

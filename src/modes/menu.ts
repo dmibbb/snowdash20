@@ -77,7 +77,7 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
           else if (btn === 'help') callbacks.onHelp();
           else if (btn === 'exit') {
             audio.stopMusic();
-            audio.playSfxForDuration(29, 2800);
+            audio.playSfxForDuration(29, 7930);
             modal = 'exit';
           }
         }

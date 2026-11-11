@@ -2,6 +2,7 @@ import type { ModeHooks } from '../game/modeMachine';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
 import { audio } from '../audio/audio';
 import { assets } from '../assets/loader';
+import { drawGlowingText } from '../render/overlays';
 
 export interface SplashCallbacks {
   onStart: () => void;
@@ -59,14 +60,10 @@ export function createSplash(callbacks: SplashCallbacks): ModeHooks {
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       }
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-      ctx.fillRect(0, CANVAS_HEIGHT / 2 - 40, CANVAS_WIDTH, 80);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, CANVAS_HEIGHT / 2 - 45, CANVAS_WIDTH, 90);
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Press any key to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+      drawGlowingText(ctx, 'Press any key to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 32);
     },
   };
 }
