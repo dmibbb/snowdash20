@@ -190,20 +190,20 @@ describe('Game', () => {
     expect(audio.playSfx).toHaveBeenCalledTimes(1);
   });
 
-  it('falling stone on player → onPlayerHit via tick', async () => {
+  it('stone does not fall on player standing directly below', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
     await game.start();
     const initialLives = game.lives;
 
-    // Stone one cell above the player. Stone.update will start falling
-    // naturally; the cell below is 'empty' in the grid (Player isn't a tile),
-    // so it drops 8px and overlaps the player — onPlayerHit fires.
+    // Stone one cell above player — must NOT fall (matches original KillMode logic)
     const stone = new Stone(4, 3);
     game.stones.push(stone);
 
     game.tick(null);
 
-    expect(game.lives).toBe(initialLives - 1);
+    expect(game.lives).toBe(initialLives); // player is safe
+    expect(stone.state).toBe('idle'); // stone stayed put
+    expect(stone.y).toBe(120);
   });
 
   it('monster on player → onPlayerHit via tick', async () => {
@@ -281,5 +281,26 @@ describe('Game', () => {
 
     expect(game.isGameOver).toBe(true);
     expect(game.victory).toBe(true);
+  });
+
+  it('player walks away under idle stone → stone falls safely, no collision', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
+    await game.start();
+    const initialLives = game.lives;
+
+    // Stone one cell above player start position
+    const stone = new Stone(4, 3);
+    game.stones.push(stone);
+
+    // Player walks right for 8 ticks (from x=160 to x=200, fully out of column 4)
+    for (let i = 0; i < 8; i++) game.tick('right');
+
+    // The column below is fully empty — stone falls all the way to row 11
+    // (right above the bottom wall). 8 cells × 5 ticks/cell + safety margin.
+    for (let i = 0; i < 60; i++) game.tick(null);
+
+    expect(game.lives).toBe(initialLives); // survived the walk-away
+    expect(stone.state).toBe('idle');
+    expect(stone.y).toBe(11 * 40); // landed at row 11 (y=440)
   });
 });

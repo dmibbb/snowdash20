@@ -9,6 +9,7 @@ vi.mock('../audio/audio', () => ({
 }));
 
 import { Stone } from './stone';
+import { Player } from './player';
 import { Level } from '../level/level';
 import { parseLevel } from '../level/parser';
 
@@ -146,5 +147,55 @@ describe('Stone', () => {
     a.update(level, [a, b], null);
     expect(a.state).toBe('pushed');
     expect(a.x).toBeLessThan(3 * 40);
+  });
+
+  it('does not start falling when player is directly below', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+    const player = new Player(3, 4);
+
+    s.update(level, [s], player);
+
+    expect(s.state).toBe('idle');
+    expect(s.y).toBe(120); // did not move
+  });
+
+  it('starts falling after player moves away from below', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+    const player = new Player(3, 4);
+
+    s.update(level, [s], player);
+    expect(s.state).toBe('idle');
+
+    // Simulate player stepping aside
+    player.x = 5 * 40;
+    player.y = 4 * 40;
+
+    s.update(level, [s], player);
+    expect(s.state).toBe('falling');
+  });
+
+  it('keeps stone idle while player is mid-step leaving the cell below', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+    const player = new Player(3, 4);
+    player.x = 3 * 40 + 20; // half-way out to the right, AABB still overlaps (3,4)
+
+    s.update(level, [s], player);
+
+    expect(s.state).toBe('idle');
+    expect(s.y).toBe(120);
+  });
+
+  it('starts falling once player has fully left the cell below', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+    const player = new Player(3, 4);
+    player.x = 4 * 40; // fully in next cell — no AABB overlap with (3,4)
+
+    s.update(level, [s], player);
+
+    expect(s.state).toBe('falling');
   });
 });

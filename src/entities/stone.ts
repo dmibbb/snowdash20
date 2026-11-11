@@ -79,6 +79,13 @@ export class Stone {
     const cell = this.getCell();
     const canFallNow = this.canFall(level, stones);
 
+    // If the player's AABB overlaps the target cell below, do not start falling.
+    // Matches original: an idle stone treats the cell as blocked while the player
+    // occupies it (or is mid-step leaving it).
+    if (canFallNow && player && this.playerOverlapsCell(player, cell.col, cell.row + 1)) {
+      return;
+    }
+
     // Detect the end of a continuous fall: we were falling, and now nothing's below.
     if (this.hasFallSoundPlayed && !canFallNow) {
       audio.playSfx(35); // Stone Falled
@@ -113,11 +120,10 @@ export class Stone {
       if (!this.isCellFree(level, stones, sideCol, sideRow)) continue;
       if (!this.isCellFree(level, stones, belowSideCol, belowSideRow)) continue;
 
-      // 4. Don't roll onto the player or onto the cell right above them
+      // 4. Don't roll onto the player (AABB) or onto the cell right above them
       if (player) {
-        const pc = player.getCell();
-        if (pc.col === sideCol && pc.row === sideRow) continue;
-        if (pc.col === sideCol && pc.row === sideRow - 1) continue;
+        if (this.playerOverlapsCell(player, sideCol, sideRow)) continue;
+        if (this.playerOverlapsCell(player, sideCol, sideRow - 1)) continue;
       }
 
       this.state = 'pushed';
@@ -134,6 +140,20 @@ export class Stone {
       if (sc.col === col && sc.row === row) return true;
     }
     return false;
+  }
+
+  // Returns true if the player's AABB overlaps the given grid cell.
+  // Used instead of player.getCell() because getCell rounds mid-step
+  // positions — the player may visually still be in the cell they just left.
+  private playerOverlapsCell(player: Player, col: number, row: number): boolean {
+    const px = col * TILE_SIZE;
+    const py = row * TILE_SIZE;
+    return (
+      player.x < px + TILE_SIZE &&
+      player.x + TILE_SIZE > px &&
+      player.y < py + TILE_SIZE &&
+      player.y + TILE_SIZE > py
+    );
   }
 
   private moveTowardTarget(): void {
