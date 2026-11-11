@@ -8,7 +8,7 @@ export interface ModeHooks {
 }
 
 export class ModeMachine {
-  currentMode: GameMode = 'intro';
+  currentMode: GameMode | null = null;
 
   private hooks: Partial<Record<GameMode, ModeHooks>> = {};
 
@@ -18,16 +18,20 @@ export class ModeMachine {
 
   setMode(mode: GameMode): void {
     if (mode === this.currentMode) return;
-    this.hooks[this.currentMode]?.onExit?.();
+    if (this.currentMode !== null) {
+      this.hooks[this.currentMode]?.onExit?.();
+    }
     this.currentMode = mode;
     this.hooks[mode]?.onEnter?.();
   }
 
   tick(): void {
+    if (this.currentMode === null) return;
     this.hooks[this.currentMode]?.tick?.();
   }
 
   render(ctx: CanvasRenderingContext2D): void {
+    if (this.currentMode === null) return;
     this.hooks[this.currentMode]?.render?.(ctx);
   }
 }
