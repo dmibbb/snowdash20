@@ -102,11 +102,10 @@ describe('Game', () => {
     expect(game.isGameOver).toBe(true);
   });
 
-  it('onPlayerHit with lives > 0 → lives--, level reset', async () => {
+  it('onPlayerHit with lives > 0 → lives--, pendingHeroDeath, reset on resolve', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
     await game.start();
 
-    // Simulate chest eaten and score gained
     game.level!.setCell(12, 4, 'empty');
     game.visibleChests = 0;
     game.score = 30;
@@ -115,13 +114,20 @@ describe('Game', () => {
 
     expect(game.lives).toBe(3);
     expect(game.isGameOver).toBe(false);
-    expect(game.score).toBe(30); // score preserved
-    expect(game.visibleChests).toBe(1); // chests restored
+    expect(game.pendingHeroDeath).toBe(true);
+    expect(game.score).toBe(30);
+    expect(game.level!.getCell(12, 4)).toBe('empty');
+
+    game.resolveHeroDeath();
+
+    expect(game.pendingHeroDeath).toBe(false);
+    expect(game.isGameOver).toBe(false);
+    expect(game.visibleChests).toBe(1);
     expect(game.level!.getCell(12, 4)).toBe('chest');
     expect(audio.playSfxCyclic).toHaveBeenCalledWith(26, 29);
   });
 
-  it('onPlayerHit at 1 life → GameOver', async () => {
+  it('onPlayerHit at 1 life → GameOver immediately (no RIP)', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
     await game.start();
     game.lives = 1;
@@ -130,6 +136,7 @@ describe('Game', () => {
 
     expect(game.lives).toBe(0);
     expect(game.isGameOver).toBe(true);
+    expect(game.pendingHeroDeath).toBe(false);
   });
 
   it('level complete → +50, pendingLevelComplete, next level loaded after advance', async () => {

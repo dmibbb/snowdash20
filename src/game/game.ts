@@ -20,6 +20,7 @@ export class Game {
   monsters: Monster[] = [];
   isGameOver = false;
   pendingLevelComplete = false;
+  pendingHeroDeath = false;
   victory = false;
 
   private loading = false;
@@ -62,7 +63,8 @@ export class Game {
   }
 
   tick(input: Direction | null): void {
-    if (this.isGameOver || this.loading || this.pendingLevelComplete) return;
+    if (this.isGameOver || this.loading || this.pendingLevelComplete || this.pendingHeroDeath)
+      return;
     if (!this.level || !this.player) return;
 
     this.player.update(input, this.level, this, this.stones, this.monsters);
@@ -119,12 +121,21 @@ export class Game {
 
   // Called externally (from Player when it walks into a monster, and internally).
   onPlayerHit(): void {
-    audio.playSfxCyclic(26, 29); // Hero Die (cyclic, fixes original bug)
     this.lives -= 1;
     if (this.lives <= 0) {
+      // Final death: no hero die jingle — GameOver plays "Your Score" instead
       this.isGameOver = true;
       return;
     }
+    audio.playSfxCyclic(26, 29);
+    this.pendingHeroDeath = true;
+  }
+
+  // Called from HeroDeath mode after the RIP pause. Resets the level or
+  // ends the game depending on remaining lives.
+  resolveHeroDeath(): void {
+    if (!this.pendingHeroDeath) return;
+    this.pendingHeroDeath = false;
     this.resetLevel();
   }
 

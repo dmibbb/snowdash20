@@ -24,6 +24,7 @@ import { createSplash } from './modes/splash';
 import { audio } from './audio/audio';
 import { assets } from './assets/loader';
 import { createLevelComplete } from './modes/levelcomplete';
+import { createHeroDeath } from './modes/herodeath';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -156,6 +157,8 @@ async function main(): Promise<void> {
         machine.setMode('gameover');
       } else if (game?.pendingLevelComplete) {
         machine.setMode('levelcomplete');
+      } else if (game?.pendingHeroDeath) {
+        machine.setMode('herodeath');
       }
     },
     render: (c) => {
@@ -223,6 +226,20 @@ async function main(): Promise<void> {
       getGame: () => game,
       onContinue: () => {
         game?.advanceToNextLevel();
+        if (game?.isGameOver) {
+          machine.setMode('gameover');
+        } else {
+          machine.setMode('playing');
+        }
+      },
+    }),
+  );
+
+  machine.register(
+    'herodeath',
+    createHeroDeath({
+      getGame: () => game,
+      onDone: () => {
         if (game?.isGameOver) {
           machine.setMode('gameover');
         } else {

@@ -5,6 +5,15 @@ const SFX_IDS = [
 ];
 const MUSIC_VOLUME = 0.5;
 
+// Per-SFX volume overrides (1.0 = default). Only list sounds that need
+// a different level — everything else plays at full volume.
+const SFX_VOLUMES: Record<number, number> = {
+  26: 0.75, // Hero Death 1
+  27: 0.75, // Hero Death 2
+  28: 0.75, // Hero Death 3
+  38: 0.3, // "Your Score" jingle — half volume
+};
+
 // Playlist map from SPEC 13.1. Track 01 is looped (no transition);
 // 02 → 03 → 04 → 02 cycle.
 const MUSIC_NEXT: Record<number, number> = {
@@ -194,7 +203,7 @@ class AudioManager {
       return;
     }
 
-    // Restart from beginning (simple overlap handling — one instance per SFX)
+    sound.volume = SFX_VOLUMES[id] ?? 1;
     sound.currentTime = 0;
     sound.play().catch((err) => {
       console.warn(`[Audio] playSfx(${id}) rejected:`, err);
@@ -215,6 +224,7 @@ class AudioManager {
       return;
     }
 
+    sound.volume = SFX_VOLUMES[id] ?? 1;
     sound.currentTime = 0;
     sound.play().catch((err) => {
       console.warn(`[Audio] playSfxForDuration(${id}) rejected:`, err);

@@ -134,7 +134,9 @@ export class Player {
       level.setCell(cell.col, cell.row, 'empty');
       game.score += CHEST_POINTS;
       game.visibleChests -= 1;
-      audio.playSfxCyclic(12, 19);
+      if (game.visibleChests > 0) {
+        audio.playSfxCyclic(12, 19);
+      }
     }
   }
 

@@ -14,6 +14,7 @@ import { parseLevel } from '../level/parser';
 import { Monster } from './monster';
 import { Stone } from './stone';
 import type { Game } from '../game/game';
+import { audio } from '../audio/audio';
 
 // Player at (2,2), snow at (3,2), chest at (4,2), wall at (6,2)
 const PLAYER_LEVEL = [
@@ -168,5 +169,24 @@ describe('Player', () => {
 
     for (let i = 0; i < 2; i++) p.update('right', level, game as unknown as Game, [], []);
     expect(p.getSpriteKey()).toBe('p_r_2');
+  });
+
+  it('skips "eat chest" SFX for the last chest', () => {
+    const p = new Player(2, 2);
+    const level = makeLevel();
+    const game = makeGame(); // visibleChests = 1 (only one chest on this level)
+
+    // Walk to (3,2) — eat snow (irrelevant SFX, clear after)
+    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    p.update(null, level, game as unknown as Game, [], []);
+
+    vi.clearAllMocks();
+
+    // Walk to (4,2) — eat the last chest
+    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    p.update(null, level, game as unknown as Game, [], []);
+
+    expect(game.visibleChests).toBe(0);
+    expect(audio.playSfxCyclic).not.toHaveBeenCalledWith(12, 19);
   });
 });

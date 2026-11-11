@@ -30,6 +30,7 @@ export function createGameOver(callbacks: GameOverCallbacks): ModeHooks {
       consumeClick();
       consumeConfirm();
       consumePause();
+      audio.stopAllSfx();
       audio.stopMusic();
       audio.playSfx(38); // Your Score
     },

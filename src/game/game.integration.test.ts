@@ -100,7 +100,8 @@ describe('Game integration', () => {
     expect(game.player!.getCell()).toEqual({ col: 6, row: 4 });
     expect(game.level!.getCell(6, 4)).toBe('empty');
     expect(game.visibleChests).toBe(0);
-    expect(audio.playSfxCyclic).toHaveBeenCalledWith(12, 19);
+    // Last chest → "eat chest" SFX is skipped, Level Done (30) plays instead
+    expect(audio.playSfxCyclic).not.toHaveBeenCalledWith(12, 19);
 
     // Level complete fires in the SAME tick as chest consumption:
     // score = 30 (chest) + 50 (bonus) = 80, level stays on 1 until Continue
@@ -135,21 +136,19 @@ describe('Game integration', () => {
     expect(game.victory).toBe(true);
   });
 
-  it('walks into a monster → loses life, level resets', async () => {
+  it('walks into a monster → loses life, pendingHeroDeath', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_ONE]));
     await game.start();
 
-    // Place a monster at (5,4) — right where the player would walk to
     const monster = new Monster(5, 4, 1);
     game.monsters.push(monster);
 
     const initialLives = game.lives;
 
-    // Player tries to walk right into monster's cell
     game.tick('right');
 
-    // onPlayerHit → lives--, but doesn't die yet
     expect(game.lives).toBe(initialLives - 1);
-    expect(game.player!.x).toBe(4 * 40); // reset to start
+    expect(game.pendingHeroDeath).toBe(true);
+    expect(game.player!.getCell()).toEqual({ col: 4, row: 4 }); // didn't move
   });
 });
