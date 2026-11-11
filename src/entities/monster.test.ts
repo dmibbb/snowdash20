@@ -120,4 +120,21 @@ describe('Monster', () => {
     // Initially lastH = 'l'
     expect(m.getSpriteKey()).toBe('spiker_l_1');
   });
+
+  it('model 2 (spiker) starts facing left', () => {
+    const m = new Monster(5, 5, 2);
+    expect(m.direction).toBe('left');
+  });
+
+  it('model 2 (spiker) only moves horizontally', () => {
+    const m = new Monster(5, 5, 2);
+    const level = makeLevel();
+    const monsters = [m];
+
+    // After many ticks, direction must never be up or down
+    for (let i = 0; i < 50; i++) {
+      m.update(level, [], monsters);
+      expect(['left', 'right']).toContain(m.direction);
+    }
+  });
 });

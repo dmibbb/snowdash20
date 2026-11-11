@@ -5,7 +5,8 @@ import { TILE_SIZE, MONSTER_SPEED } from '../config';
 
 export type MonsterModel = 1 | 2;
 
-const DIRECTIONS: Direction[] = ['up', 'down', 'left', 'right'];
+const DIRECTIONS_ALL: Direction[] = ['up', 'down', 'left', 'right'];
+const DIRECTIONS_HORIZONTAL: Direction[] = ['left', 'right'];
 
 export class Monster {
   x: number;
@@ -30,6 +31,7 @@ export class Monster {
     this.y = row * TILE_SIZE;
     this.targetX = this.x;
     this.targetY = this.y;
+    this.direction = model === 2 ? 'left' : 'down';
   }
 
   reset(): void {
@@ -38,7 +40,7 @@ export class Monster {
     this.targetX = this.x;
     this.targetY = this.y;
     this.state = 'idle';
-    this.direction = 'down';
+    this.direction = this.model === 2 ? 'left' : 'down';
     this.killed = false;
     this.animTick = 0;
     this.lastH = 'l';
@@ -57,7 +59,8 @@ export class Monster {
     if (this.state === 'idle') {
       // Keep current direction if possible; otherwise pick a random available one.
       if (!this.canMove(this.direction, level, stones, monsters)) {
-        const available = DIRECTIONS.filter((d) => this.canMove(d, level, stones, monsters));
+        const dirs = this.model === 2 ? DIRECTIONS_HORIZONTAL : DIRECTIONS_ALL;
+        const available = dirs.filter((d) => this.canMove(d, level, stones, monsters));
         if (available.length === 0) return;
         this.direction = available[Math.floor(Math.random() * available.length)];
       }
