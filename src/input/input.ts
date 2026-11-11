@@ -17,6 +17,7 @@ const pressed = new Set<string>();
 let pendingConfirm = false;
 let pendingPause = false;
 let pendingMute = false;
+let pendingNextTrack = false;
 let pendingAnyKey = false;
 let pendingClick: { x: number; y: number } | null = null;
 let mousePos: { x: number; y: number } | null = null;
@@ -48,6 +49,8 @@ export function initInput(canvas: HTMLCanvasElement, w = 800, h = 600): void {
       pendingPause = true;
     } else if (e.code === 'KeyM') {
       pendingMute = true;
+    } else if (e.code === 'KeyN') {
+      pendingNextTrack = true;
     }
   });
 
@@ -112,6 +115,12 @@ export function consumePause(): boolean {
 export function consumeMute(): boolean {
   const v = pendingMute;
   pendingMute = false;
+  return v;
+}
+
+export function consumeNextTrack(): boolean {
+  const v = pendingNextTrack;
+  pendingNextTrack = false;
   return v;
 }
 

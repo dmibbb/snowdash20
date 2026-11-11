@@ -155,6 +155,19 @@ class AudioManager {
     this.currentMusicId = null;
   }
 
+  // Cycles through in-game music tracks 2 → 3 → 4 → 2.
+  nextGameTrack(): void {
+    const order = [2, 3, 4];
+    let next: number;
+    if (this.currentMusicId === null || !order.includes(this.currentMusicId)) {
+      next = order[0];
+    } else {
+      const idx = order.indexOf(this.currentMusicId);
+      next = order[(idx + 1) % order.length];
+    }
+    this.playMusic(next);
+  }
+
   // === SFX ===
 
   playSfx(id: number): void {

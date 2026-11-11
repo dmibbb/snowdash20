@@ -8,6 +8,7 @@ import {
   consumeAnyKey,
   consumeConfirm,
   consumeClick,
+  consumeNextTrack,
   getMousePosition,
 } from './input/input';
 import { isPointInRect } from './render/button';
@@ -200,6 +201,9 @@ async function main(): Promise<void> {
       }
 
       if (paused) {
+        // Track switching is disabled while paused — drop any pending N
+        consumeNextTrack();
+
         const mouse = getMousePosition();
         hoverPauseMenu = mouse ? isPointInRect(mouse, PAUSE_MENU_BUTTON) : false;
 
@@ -210,6 +214,10 @@ async function main(): Promise<void> {
           machine.setMode('menu');
         }
         return;
+      }
+
+      if (consumeNextTrack()) {
+        audio.nextGameTrack();
       }
 
       game?.tick(getDirection());
@@ -233,6 +241,7 @@ async function main(): Promise<void> {
     ...introBase,
     onEnter: () => {
       introBase.onEnter?.();
+      consumeNextTrack();
       audio.playMusic(1);
     },
   });
@@ -249,6 +258,7 @@ async function main(): Promise<void> {
     ...menuBase,
     onEnter: () => {
       menuBase.onEnter?.();
+      consumeNextTrack();
       audio.playMusic(1);
     },
   });
