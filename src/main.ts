@@ -15,7 +15,7 @@ import { isPointInRect } from './render/button';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
-import { drawPauseOverlay, PAUSE_MENU_BUTTON } from './render/overlays';
+import { drawPauseOverlay, PAUSE_MENU_BUTTON, PAUSE_RESTART_BUTTON } from './render/overlays';
 import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
@@ -25,6 +25,7 @@ import { audio } from './audio/audio';
 import { assets } from './assets/loader';
 import { createLevelComplete } from './modes/levelcomplete';
 import { createHeroDeath } from './modes/herodeath';
+import { createLevelTitle } from './modes/leveltitle';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -108,7 +109,11 @@ async function main(): Promise<void> {
     try {
       game = new Game(levelPaths, loadLevelFile);
       await game.start();
-      machine.setMode('playing');
+      if (game.isGameOver) {
+        machine.setMode('gameover');
+      } else {
+        machine.setMode('leveltitle');
+      }
     } finally {
       startingGame = false;
     }
@@ -116,16 +121,20 @@ async function main(): Promise<void> {
 
   let paused = false;
   let hoverPauseMenu = false;
+  let hoverPauseRestart = false;
 
   machine.register('playing', {
     onEnter: () => {
       paused = false;
       hoverPauseMenu = false;
+      hoverPauseRestart = false;
       consumePause();
       audio.enterGameplay();
     },
     onExit: () => {
       paused = false;
+      hoverPauseMenu = false;
+      hoverPauseRestart = false;
       audio.setPaused(false);
     },
     tick: () => {
@@ -138,8 +147,22 @@ async function main(): Promise<void> {
       if (paused) {
         consumeNextTrack();
         const mouse = getMousePosition();
+        hoverPauseRestart = mouse ? isPointInRect(mouse, PAUSE_RESTART_BUTTON) : false;
         hoverPauseMenu = mouse ? isPointInRect(mouse, PAUSE_MENU_BUTTON) : false;
+
         const click = consumeClick();
+
+        if (click && isPointInRect(click, PAUSE_RESTART_BUTTON)) {
+          audio.stopAllSfx();
+          game?.restartLevel();
+          paused = false;
+          hoverPauseRestart = false;
+          hoverPauseMenu = false;
+          audio.setPaused(false);
+          audio.playSfx(31); // click feedback after unpause
+          return;
+        }
+
         if (click && isPointInRect(click, PAUSE_MENU_BUTTON)) {
           audio.stopAllSfx();
           audio.playSfx(31);
@@ -163,7 +186,7 @@ async function main(): Promise<void> {
     },
     render: (c) => {
       if (game) renderGame(c, game);
-      if (paused) drawPauseOverlay(c, hoverPauseMenu);
+      if (paused) drawPauseOverlay(c, hoverPauseRestart, hoverPauseMenu);
     },
   });
 
@@ -225,12 +248,15 @@ async function main(): Promise<void> {
     createLevelComplete({
       getGame: () => game,
       onContinue: () => {
-        game?.advanceToNextLevel();
-        if (game?.isGameOver) {
-          machine.setMode('gameover');
-        } else {
-          machine.setMode('playing');
-        }
+        void (async () => {
+          if (!game) return;
+          await game.advanceToNextLevel();
+          if (game.isGameOver) {
+            machine.setMode('gameover');
+          } else {
+            machine.setMode('leveltitle');
+          }
+        })();
       },
     }),
   );
@@ -245,6 +271,16 @@ async function main(): Promise<void> {
         } else {
           machine.setMode('playing');
         }
+      },
+    }),
+  );
+
+  machine.register(
+    'leveltitle',
+    createLevelTitle({
+      getGame: () => game,
+      onDone: () => {
+        machine.setMode('playing');
       },
     }),
   );

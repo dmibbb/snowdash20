@@ -53,19 +53,22 @@ describe('parseLevel', () => {
     expect(() => parseLevel(lines.join('\n'))).toThrow(/Multiple P/);
   });
 
-  it('pads short lines with spaces', () => {
+  it('throws on short line (no silent padding)', () => {
     const lines = VALID_LEVEL.split('\n');
     lines[1] = 'B';
-    const r = parseLevel(lines.join('\n'));
-    expect(r.grid[1].length).toBe(20);
-    expect(r.grid[1][0]).toBe('wall');
-    expect(r.grid[1][1]).toBe('empty');
+    expect(() => parseLevel(lines.join('\n'))).toThrow(/Row 1: expected 20 chars, got 1/);
+  });
+
+  it('throws on 19-char line (original 2006 files were 19 wide)', () => {
+    const lines = VALID_LEVEL.split('\n');
+    lines[1] = 'B'.repeat(19);
+    expect(() => parseLevel(lines.join('\n'))).toThrow(/Row 1: expected 20 chars, got 19/);
   });
 
   it('throws on long line', () => {
     const lines = VALID_LEVEL.split('\n');
     lines[1] = 'B' + '.'.repeat(20) + 'B'; // 22 chars
-    expect(() => parseLevel(lines.join('\n'))).toThrow(/too long/);
+    expect(() => parseLevel(lines.join('\n'))).toThrow(/Row 1: expected 20 chars, got 22/);
   });
 
   it('collects stone starts', () => {
@@ -99,5 +102,49 @@ describe('parseLevel', () => {
     expect(r.grid[0][0]).toBe('wall');
     expect(r.grid[1][1]).toBe('empty');
     expect(r.start).toEqual({ col: 8, row: 7 });
+  });
+
+  it('parses optional level name from ":Name" first line', () => {
+    const withName = ':First Easy Step\n' + VALID_LEVEL;
+    const r = parseLevel(withName);
+    expect(r.name).toBe('First Easy Step');
+    expect(r.grid.length).toBe(13);
+  });
+
+  it('returns null name when no ":Name" line', () => {
+    const r = parseLevel(VALID_LEVEL);
+    expect(r.name).toBeNull();
+  });
+
+  it('treats ":   " (whitespace only) as null name', () => {
+    const withEmpty = ':   \n' + VALID_LEVEL;
+    const r = parseLevel(withEmpty);
+    expect(r.name).toBeNull();
+  });
+
+  it('trims trailing whitespace from lines', () => {
+    const lines = VALID_LEVEL.split('\n');
+    // Each row gets 3 trailing spaces — should NOT trigger "too long"
+    const padded = lines.map((l) => l + '   ').join('\n');
+    const r = parseLevel(padded);
+    expect(r.grid.length).toBe(13);
+    expect(r.grid[0].length).toBe(20);
+    expect(r.grid[0][19]).toBe('wall');
+  });
+
+  it('trims trailing tab / mixed whitespace', () => {
+    const lines = VALID_LEVEL.split('\n');
+    lines[1] = lines[1] + '\t  \t';
+    const r = parseLevel(lines.join('\n'));
+    expect(r.grid[1].length).toBe(20);
+  });
+
+  it('does not trim leading spaces (they are valid empty cells)', () => {
+    const lines = VALID_LEVEL.split('\n');
+    lines[1] = ' ' + lines[1].substring(1); // replace col 0 wall with space
+    const r = parseLevel(lines.join('\n'));
+    // After trim, col 0 remains ' ' → parsed as empty (no wall enforcement)
+    expect(r.grid[1].length).toBe(20);
+    expect(r.grid[1][0]).toBe('empty');
   });
 });

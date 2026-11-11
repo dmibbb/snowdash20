@@ -60,10 +60,6 @@ function makeFetcher(levels: string[]): (path: string) => Promise<string> {
   };
 }
 
-async function flushAsync(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 // Walk right one full cell (8 ticks at PLAYER_SPEED=5 → 40px).
 // Then one more tick in idle so consumeCurrentTile fires on arrival.
 function walkRight(game: Game): void {
@@ -110,9 +106,7 @@ describe('Game integration', () => {
     expect(game.levelIndex).toBe(0);
     expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
 
-    // Simulate Continue button
-    game.advanceToNextLevel();
-    await flushAsync();
+    await game.advanceToNextLevel();
 
     expect(game.pendingLevelComplete).toBe(false);
     expect(game.levelIndex).toBe(1);
@@ -130,7 +124,7 @@ describe('Game integration', () => {
     expect(game.pendingLevelComplete).toBe(true);
     expect(game.isGameOver).toBe(false);
 
-    game.advanceToNextLevel();
+    await game.advanceToNextLevel();
 
     expect(game.isGameOver).toBe(true);
     expect(game.victory).toBe(true);

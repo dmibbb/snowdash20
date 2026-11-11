@@ -59,10 +59,6 @@ function makeFetcher(levels: string[]): (path: string) => Promise<string> {
   };
 }
 
-async function flushAsync(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 describe('Game', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -151,8 +147,7 @@ describe('Game', () => {
     expect(game.levelIndex).toBe(0); // still on level 1 — waiting for Continue
     expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
 
-    game.advanceToNextLevel();
-    await flushAsync();
+    await game.advanceToNextLevel();
 
     expect(game.pendingLevelComplete).toBe(false);
     expect(game.levelIndex).toBe(1);
@@ -169,7 +164,7 @@ describe('Game', () => {
     expect(game.pendingLevelComplete).toBe(true);
     expect(game.isGameOver).toBe(false); // wait for Continue
 
-    game.advanceToNextLevel();
+    await game.advanceToNextLevel();
 
     expect(game.pendingLevelComplete).toBe(false);
     expect(game.isGameOver).toBe(true);
@@ -277,7 +272,7 @@ describe('Game', () => {
     await game.start();
     game.tick(null); // pendingLevelComplete = true
 
-    game.advanceToNextLevel();
+    await game.advanceToNextLevel();
 
     expect(game.isGameOver).toBe(true);
     expect(game.victory).toBe(true);

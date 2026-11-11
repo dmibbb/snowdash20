@@ -6,6 +6,7 @@ export class Level {
   readonly cols: number;
   readonly rows: number;
   readonly tileSize = TILE_SIZE;
+  readonly name: string | null;
   readonly start: CellCoords;
   chestsCount: number;
 
@@ -19,6 +20,7 @@ export class Level {
     this.grid = parsed.grid;
     this.rows = parsed.grid.length;
     this.cols = parsed.grid[0].length;
+    this.name = parsed.name;
     this.start = parsed.start;
     this.chestsCount = parsed.chestsCount;
   }
