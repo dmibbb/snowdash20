@@ -3,6 +3,7 @@ const SFX_IDS = [
   11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
   38,
 ];
+const MUSIC_VOLUME = 0.75;
 
 // Playlist map from SPEC 13.1. Track 01 is looped (no transition);
 // 02 → 03 → 04 → 02 cycle.
@@ -89,7 +90,8 @@ class AudioManager {
       await first.play();
       first.pause();
       first.currentTime = 0;
-      first.volume = this.muted ? 0 : 1;
+      first.volume = this.muted ? 0 : MUSIC_VOLUME;
+      this.unlocked = true;
       this.unlocked = true;
       console.log('[Audio] unlocked');
       if (this.pendingMusicId !== null) {
@@ -125,7 +127,7 @@ class AudioManager {
     }
 
     this.currentMusicId = id;
-    target.volume = this.muted ? 0 : 1;
+    target.volume = this.muted ? 0 : MUSIC_VOLUME;
     target.loop = id === 1;
     target.onended = () => {
       const nextId = MUSIC_NEXT[id];
@@ -252,7 +254,7 @@ class AudioManager {
 
   toggleMute(): void {
     this.muted = !this.muted;
-    const volume = this.muted ? 0 : 1;
+    const volume = this.muted ? 0 : MUSIC_VOLUME;
 
     if (this.currentMusicId !== null) {
       const current = this.music.get(this.currentMusicId);
