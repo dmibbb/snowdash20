@@ -61,43 +61,96 @@ function drawModalFrame(ctx: CanvasRenderingContext2D): void {
   ctx.strokeRect(boxX + 1.5, boxY + 1.5, boxW - 3, boxH - 3);
 }
 
+interface TextSegment {
+  text: string;
+  color: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+}
+
+// Draws a sequence of colored text segments centered horizontally at `cx`
+function drawCenteredSegments(
+  ctx: CanvasRenderingContext2D,
+  segments: TextSegment[],
+  cx: number,
+  y: number,
+): void {
+  const savedAlign = ctx.textAlign;
+  ctx.textAlign = 'left';
+
+  let totalWidth = 0;
+  for (const seg of segments) {
+    totalWidth += ctx.measureText(seg.text).width;
+  }
+
+  let x = cx - totalWidth / 2;
+  for (const seg of segments) {
+    if (seg.strokeColor && seg.strokeWidth) {
+      ctx.lineWidth = seg.strokeWidth;
+      ctx.strokeStyle = seg.strokeColor;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeText(seg.text, x, y);
+    }
+    ctx.fillStyle = seg.color;
+    ctx.fillText(seg.text, x, y);
+    x += ctx.measureText(seg.text).width;
+  }
+
+  ctx.textAlign = savedAlign;
+}
+
 export function drawAboutOverlay(ctx: CanvasRenderingContext2D): void {
   drawModalFrame(ctx);
 
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const cx = CANVAS_WIDTH / 2;
-  let y = 170;
 
+  ctx.textAlign = 'center';
   ctx.fillStyle = '#ecf0f1';
   ctx.font = 'bold 24px monospace';
-  ctx.fillText('RGB Team', cx, y);
+  ctx.fillText('SnowDash v1.0', cx, 155);
 
-  y += 28;
-  ctx.fillStyle = 'rgba(236, 240, 241, 0.5)';
   ctx.font = '16px monospace';
-  ctx.fillText('---------------------------', cx, y);
+  ctx.fillText('...2 Dash or not 2 Dash?', cx, 175);
 
-  y += 30;
-  ctx.fillStyle = '#ecf0f1';
-  ctx.font = 'bold 22px monospace';
-  ctx.fillText('SnowDash v1.0', cx, y);
+  ctx.font = 'bold 20px monospace';
+  drawCenteredSegments(
+    ctx,
+    [
+      { text: 'Created by ', color: '#ecf0f1' },
+      { text: 'R', color: '#ff0000' },
+      { text: 'G', color: '#00ff00' },
+      { text: 'B', color: '#0000ff' },
+      { text: ' ', color: '#ecf0f1' },
+      {
+        text: 'Team',
+        color: '#0a0a0a',
+        strokeColor: '#ecf0f1',
+        strokeWidth: 2,
+      },
+      { text: ' (c) 2006, 2008', color: '#ecf0f1' },
+    ],
+    cx,
+    270,
+  );
 
-  y += 30;
-  ctx.font = '18px monospace';
-  ctx.fillText('...2 Dash or not 2 Dash?', cx, y);
+  ctx.font = '20px monospace';
+  drawCenteredSegments(
+    ctx,
+    [
+      { text: 'Web edition created by ', color: '#ecf0f1' },
+      { text: 'Димасик', color: '#0000ff' },
+      { text: ' in 2026', color: '#ecf0f1' },
+    ],
+    cx,
+    300,
+  );
 
-  y += 40;
-  ctx.fillText('Created by RGB Team', cx, y);
-
-  y += 40;
-  ctx.fillStyle = 'rgba(236, 240, 241, 0.7)';
-  ctx.fillText('(c) 2006', cx, y);
-
-  y += 70;
+  ctx.textAlign = 'center';
   ctx.fillStyle = '#ffd700';
   ctx.font = '18px monospace';
-  ctx.fillText('[ OK — click or press Enter ]', cx, y);
+  ctx.fillText('[ OK — click or press Enter ]', cx, 390);
 }
 
 export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
@@ -115,9 +168,9 @@ export function drawExitOverlay(ctx: CanvasRenderingContext2D): void {
   ctx.font = '18px monospace';
   ctx.fillText('See you in the next SnowDash', cx, cy + 30);
 
-  ctx.fillStyle = 'rgba(236, 240, 241, 0.7)';
-  ctx.font = '16px monospace';
-  ctx.fillText('[ OK — click or press Enter ]', cx, cy + 90);
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '18px monospace';
+  ctx.fillText('[ Quit — click or press Enter ]', cx, cy + 90);
 }
 
 export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): void {

@@ -18,6 +18,7 @@ type ButtonKey = keyof typeof BUTTONS;
 export interface MenuCallbacks {
   onStart: () => void;
   onHelp: () => void;
+  onExit?: () => void;
 }
 
 export function createMenu(callbacks: MenuCallbacks): ModeHooks {
@@ -50,8 +51,13 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
 
       if (modal !== 'none') {
         if (click || confirm || pause) {
-          audio.playSfx(31);
+          const wasExit = modal === 'exit';
           modal = 'none';
+          if (wasExit) {
+            callbacks.onExit?.();
+          } else {
+            audio.playSfx(31);
+          }
         }
         return;
       }
@@ -70,7 +76,8 @@ export function createMenu(callbacks: MenuCallbacks): ModeHooks {
           else if (btn === 'about') modal = 'about';
           else if (btn === 'help') callbacks.onHelp();
           else if (btn === 'exit') {
-            audio.playSfx(29);
+            audio.stopMusic();
+            audio.playSfxForDuration(29, 2800);
             modal = 'exit';
           }
         }

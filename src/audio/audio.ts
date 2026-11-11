@@ -22,6 +22,7 @@ class AudioManager {
   private currentMusicId: number | null = null;
   private pendingMusicId: number | null = null;
   private cyclicIndices = new Map<string, number>();
+  private sfxTimers = new Map<number, number>();
 
   get isMuted(): boolean {
     return this.muted;
@@ -174,6 +175,8 @@ class AudioManager {
     if (this.muted) return;
     if (this.paused) return;
 
+    this.clearSfxTimer(id);
+
     const sound = this.sfx.get(id);
     if (!sound) {
       console.warn(`[Audio] playSfx(${id}): not loaded`);
@@ -185,6 +188,42 @@ class AudioManager {
     sound.play().catch((err) => {
       console.warn(`[Audio] playSfx(${id}) rejected:`, err);
     });
+  }
+
+  // Plays an SFX but stops it after `durationMs` (clipped playback).
+  // If the same SFX is triggered again before the timer fires, the old timer is cancelled.
+  playSfxForDuration(id: number, durationMs: number): void {
+    if (this.muted) return;
+    if (this.paused) return;
+
+    this.clearSfxTimer(id);
+
+    const sound = this.sfx.get(id);
+    if (!sound) {
+      console.warn(`[Audio] playSfxForDuration(${id}): not loaded`);
+      return;
+    }
+
+    sound.currentTime = 0;
+    sound.play().catch((err) => {
+      console.warn(`[Audio] playSfxForDuration(${id}) rejected:`, err);
+    });
+
+    const timerId = window.setTimeout(() => {
+      sound.pause();
+      sound.currentTime = 0;
+      this.sfxTimers.delete(id);
+    }, durationMs);
+
+    this.sfxTimers.set(id, timerId);
+  }
+
+  private clearSfxTimer(id: number): void {
+    const existing = this.sfxTimers.get(id);
+    if (existing !== undefined) {
+      window.clearTimeout(existing);
+      this.sfxTimers.delete(id);
+    }
   }
 
   // Cycles through [from, to] inclusive. Counter is per-range, persists across calls.
@@ -200,6 +239,9 @@ class AudioManager {
   }
 
   stopAllSfx(): void {
+    for (const id of Array.from(this.sfxTimers.keys())) {
+      this.clearSfxTimer(id);
+    }
     for (const s of this.sfx.values()) {
       s.pause();
       s.currentTime = 0;

@@ -1,6 +1,6 @@
 export type Direction = 'up' | 'down' | 'left' | 'right' | 'stop';
 
-export type GameMode = 'intro' | 'menu' | 'help' | 'playing' | 'gameover';
+export type GameMode = 'splash' | 'intro' | 'menu' | 'help' | 'playing' | 'gameover';
 
 export type TileType = 'wall' | 'snow' | 'chest' | 'empty';
 

@@ -20,6 +20,7 @@ import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
 import { createGameOver } from './modes/gameover';
+import { createSplash } from './modes/splash';
 import { audio } from './audio/audio';
 import { assets } from './assets/loader';
 
@@ -36,12 +37,9 @@ ctx.imageSmoothingEnabled = false;
 
 initInput(canvas, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-// === Splash helpers ===
-
 function drawSplashLoading(): void {
   ctx.fillStyle = '#0a0a20';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
   ctx.fillStyle = '#4a8ed8';
   ctx.font = 'bold 32px monospace';
   ctx.textAlign = 'center';
@@ -49,60 +47,15 @@ function drawSplashLoading(): void {
   ctx.fillText('Loading...', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
 
-function drawSplashReady(): void {
-  // Intro background is available now (assets are loaded)
-  const bg = assets.get('intro');
-  if (bg) {
-    ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  } else {
-    ctx.fillStyle = '#0a0a20';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  }
-
-  // Dim panel behind text so it's readable on any background
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-  ctx.fillRect(0, CANVAS_HEIGHT / 2 - 40, CANVAS_WIDTH, 80);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 28px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Press any key to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-}
-
 function drawSplashError(message: string): void {
   ctx.fillStyle = '#1a0000';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
   ctx.fillStyle = '#e74c3c';
   ctx.font = 'bold 20px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(message, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
-
-// Wait for a user gesture (key/mouse/touch). On gesture, attempt audio unlock
-// while still inside the gesture context — otherwise browsers reject play().
-function waitForUserStart(): Promise<void> {
-  return new Promise((resolve) => {
-    const handler = (): void => {
-      window.removeEventListener('keydown', handler);
-      canvas.removeEventListener('mousedown', handler);
-      canvas.removeEventListener('touchstart', handler);
-
-      void audio.unlock().then((ok) => {
-        if (!ok) console.warn('[Splash] Audio unlock failed — music may not play');
-        resolve();
-      });
-    };
-
-    window.addEventListener('keydown', handler);
-    canvas.addEventListener('mousedown', handler);
-    canvas.addEventListener('touchstart', handler);
-  });
-}
-
-// === Level loader ===
 
 async function loadLevelFile(path: string): Promise<string> {
   const res = await fetch(path);
@@ -117,13 +70,9 @@ async function loadLevelFile(path: string): Promise<string> {
   return text;
 }
 
-// === Main ===
-
 async function main(): Promise<void> {
-  // 1. Loading splash
   drawSplashLoading();
 
-  // 2. Load assets + audio (await — DoD: "Загружаем все ассеты на этом экране")
   try {
     await Promise.all([assets.loadAll(), audio.preload()]);
   } catch (err) {
@@ -132,7 +81,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  // 3. Load level list
   let levelPaths: string[];
   try {
     const listText = await loadLevelFile('/levels/level_list.txt');
@@ -147,20 +95,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  // 4. Ready splash — "Press any key"
-  drawSplashReady();
-
-  // 5. Wait for input + unlock audio
-  await waitForUserStart();
-
-  // 6. Clear stale edge-triggered events from the splash press
-  consumeAnyKey();
-  consumeConfirm();
-  consumePause();
-  consumeClick();
-  consumeMute();
-
-  // 7. Register all modes
   const machine = new ModeMachine();
 
   let game: Game | null = null;
@@ -201,12 +135,9 @@ async function main(): Promise<void> {
       }
 
       if (paused) {
-        // Track switching is disabled while paused — drop any pending N
         consumeNextTrack();
-
         const mouse = getMousePosition();
         hoverPauseMenu = mouse ? isPointInRect(mouse, PAUSE_MENU_BUTTON) : false;
-
         const click = consumeClick();
         if (click && isPointInRect(click, PAUSE_MENU_BUTTON)) {
           audio.stopAllSfx();
@@ -231,7 +162,6 @@ async function main(): Promise<void> {
     },
   });
 
-  // Intro — play music 01 on enter (splash gate guarantees unlock succeeded)
   const introBase = createIntro({
     onDone: () => {
       machine.setMode('menu');
@@ -252,6 +182,9 @@ async function main(): Promise<void> {
     },
     onHelp: () => {
       machine.setMode('help');
+    },
+    onExit: () => {
+      machine.setMode('splash');
     },
   });
   machine.register('menu', {
@@ -282,8 +215,22 @@ async function main(): Promise<void> {
     }),
   );
 
-  // 8. Start
-  machine.setMode('intro');
+  machine.register(
+    'splash',
+    createSplash({
+      onStart: () => {
+        consumeAnyKey();
+        consumeConfirm();
+        consumePause();
+        consumeClick();
+        consumeMute();
+        consumeNextTrack();
+        machine.setMode('intro');
+      },
+    }),
+  );
+
+  machine.setMode('splash');
 
   let lastTime = performance.now();
   let accumulator = 0;

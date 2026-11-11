@@ -1,0 +1,72 @@
+import type { ModeHooks } from '../game/modeMachine';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../config';
+import { audio } from '../audio/audio';
+import { assets } from '../assets/loader';
+
+export interface SplashCallbacks {
+  onStart: () => void;
+}
+
+export function createSplash(callbacks: SplashCallbacks): ModeHooks {
+  let resolved = false;
+  let unlocking = false;
+
+  function cleanup(): void {
+    window.removeEventListener('keydown', handleGesture);
+    window.removeEventListener('mousedown', handleGesture);
+    window.removeEventListener('touchstart', handleGesture);
+  }
+
+  function handleGesture(): void {
+    if (resolved || unlocking) return;
+    unlocking = true;
+
+    // unlock() must be invoked synchronously inside the gesture handler —
+    // otherwise browsers reject play() as "not in user gesture".
+    void audio.unlock().then((ok) => {
+      unlocking = false;
+      if (ok && !resolved) {
+        resolved = true;
+        cleanup();
+        callbacks.onStart();
+      }
+      // If unlock failed — stay on splash. Next gesture retries.
+    });
+  }
+
+  return {
+    onEnter: () => {
+      resolved = false;
+      unlocking = false;
+
+      audio.stopMusic();
+      audio.stopAllSfx();
+      audio.setPaused(false);
+
+      window.addEventListener('keydown', handleGesture);
+      window.addEventListener('mousedown', handleGesture);
+      window.addEventListener('touchstart', handleGesture);
+    },
+    onExit: () => {
+      cleanup();
+    },
+    render: (ctx) => {
+      const bg = assets.get('intro');
+      if (bg) {
+        ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      } else {
+        ctx.fillStyle = '#0a0a20';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+      ctx.fillRect(0, CANVAS_HEIGHT / 2 - 40, CANVAS_WIDTH, 80);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Press any key to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    },
+  };
+}
