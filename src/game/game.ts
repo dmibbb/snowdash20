@@ -71,6 +71,11 @@ export class Game {
 
     this.player.update(input, this.level, this, this.stones, this.monsters);
 
+    // If the player just died (walked into a monster, tried to walk into a falling stone),
+    // stop processing the rest of the tick. Otherwise monsters would still move and could
+    // trigger a second onPlayerHit in the same tick (double life loss).
+    if (this.pendingHeroDeath || this.isGameOver) return;
+
     for (const m of this.monsters) {
       m.update(this.level, this.stones, this.monsters);
     }
