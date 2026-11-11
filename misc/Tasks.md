@@ -179,7 +179,7 @@ DoD: все спрайты и уровни реальные, звук играе
 - Интеграционный тест «пройти уровень».
 - Ручной прогон чек-листа раздела 19 спеки.
 - npm run build + npm run preview без ошибок.
-- Деплой на GitHub Pages / Netlify.
+- Деплой на GitHub Pages / Netlify. --> Deploy отложен на фазу 13 (после полировки в фазе 12).
 
 DoD: тесты зелёные, прод работает, игра доступна по ссылке.
 
@@ -231,3 +231,20 @@ OK
 ```
 
 Разве, что вместо Ок надо написать что-то типа Continue, если это не последний уровень.
+
+- Добавить имена уровням:
+
+```
+export const LEVEL_NAMES: string[] = [
+  'Demo Level: What is SnowDash?', // index 0 (original had no name, hardcoded title)
+  'First Easy Step',
+  'Woods, Woods, Woods...',
+  'Little Green...Ameba',
+  'Run, Snejok, Run!!!',
+  'Mission: Impossible',
+  'Labyrinth',
+  'Stone World',
+  'Just Ice!',
+  "Can't Touch Me",
+];
+```

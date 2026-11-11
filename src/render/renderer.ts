@@ -1,6 +1,13 @@
 import type { TileType } from '../types';
 import type { Game } from '../game/game';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, GRID_ROWS, DEBUG_TILE_LABELS } from '../config';
+import {
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  TILE_SIZE,
+  GRID_ROWS,
+  DEBUG_TILE_LABELS,
+  DEBUG_TILE_BORDERS,
+} from '../config';
 import { renderHud } from './hud';
 import { assets } from '../assets/loader';
 
@@ -79,22 +86,24 @@ export function render(ctx: CanvasRenderingContext2D, game: Game): void {
     }
   }
 
-  // Visual cell grid — TODO: remove in final release
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-  ctx.lineWidth = 1;
-  for (let col = 0; col <= game.level.cols; col++) {
-    const x = col * TILE_SIZE + 0.5;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, FIELD_HEIGHT);
-    ctx.stroke();
-  }
-  for (let row = 0; row <= game.level.rows; row++) {
-    const y = row * TILE_SIZE + 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(CANVAS_WIDTH, y);
-    ctx.stroke();
+  // Visual cell grid
+  if (DEBUG_TILE_BORDERS) {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    for (let col = 0; col <= game.level.cols; col++) {
+      const x = col * TILE_SIZE + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, FIELD_HEIGHT);
+      ctx.stroke();
+    }
+    for (let row = 0; row <= game.level.rows; row++) {
+      const y = row * TILE_SIZE + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(CANVAS_WIDTH, y);
+      ctx.stroke();
+    }
   }
 
   // Tiles

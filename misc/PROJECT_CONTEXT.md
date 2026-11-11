@@ -4,8 +4,8 @@
 > Источник истины по механике — `SPEC.md`. Здесь — что уже сделано, как устроено и какие решения приняты.
 >
 > **Последнее обновление:** 2026-11-11
-> **Текущая фаза:** 11 — Tests, Polish, Deploy
-> **Следующая фаза:** 12 — Known issues
+> **Текущая фаза:** 12 — Known issues
+> **Следующая фаза:** 13 — Deploy
 
 ---
 
@@ -23,7 +23,9 @@
 | 8   | UI — HUD, Pause, Modes   | ✅ Done        | 2026-11-10 |
 | 9   | Sound                    | ✅ Done        | 2026-11-10 |
 | 10  | Real Assets              | ✅ Done        | 2026-11-11 |
-| 11  | Tests, Polish, Deploy    | 🔄 in progress |            |
+| 11  | Tests, Polish, Deploy    | ✅ Done        | 2026-11-11 |
+| 12  | Known Issues             | 🔄 in progress |            |
+| 13  | Deploy                   | ⏸ not started  |            |
 
 Легенда: ⏸ not started · 🔄 in progress · ✅ done · ⚠️ blocked
 
@@ -47,15 +49,21 @@ src/
 │   └── input.ts   — keyboard + mouse: continuous (getDirection, getMousePosition) и edge (consume*)
 ├── entities/
 │   ├── player.ts  — Player
+│   ├── player.test.ts
 │   ├── stone.ts   — Stone
-│   └── monster.ts — Monster
+│   ├── stone.test.ts
+│   ├── monster.ts - Monster
+│   └── monster.test.ts
 ├── game/
 │   ├── game.ts         — Game: score, lives, levelIndex, сущности, isGameOver
+│   ├── game.test.ts
+│   ├── game.integration.test.ts
 │   ├── modeMachine.ts  — ModeMachine: FSM режимов
 │   └── rating.ts       — getRating(levelIndex)
 ├── level/
 │   ├── parser.ts       — parseLevel(text)
-│   ├── parser.test.ts  — 9 юнит-тестов (Vitest)
+│   ├── parser.test.ts
+│   ├── level.test.ts
 │   └── level.ts        — Level: getCell/setCell/isPassable, reset
 ├── modes/
 │   ├── intro.ts    — createIntro({onDone})
@@ -430,6 +438,10 @@ npm test — юнит-тесты (Vitest)
 ## 7. Известные проблемы / TODO
 
 > Все баги и улучшения для следующей итерации перенесены в `Tasks.md` → «Фаза 12: Известные проблемы и улучшения». Там же splash screen, горизонтальный спайкер, RIP-снежок, пауза с итогами уровня и т.д.
+
+- **Тесты (11.6).** 62 юнит + интеграционных теста (Vitest). Покрытие: parser, Level, Player, Stone, Monster, Game (включая milestone 250, коллизии, переходы). Тесты колокированы рядом с исходниками (`*.test.ts`).
+- **Debug-сетка убрана (11.7).** под флаг.
+- **`npm run build` + `npm run preview` — зелёные.**
 
 ---
 
