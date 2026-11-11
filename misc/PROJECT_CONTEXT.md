@@ -82,10 +82,10 @@ src/
 ```
 public/
 ├── levels/
-│   ├── level_list.txt  — список путей к уровням (level01/02/03)
-│   ├── 01.lvl
+│   ├── level_list.txt  — список путей к уровням
+│   ├── 0.lvl
 │   ├── ...
-│   └── 09.lvl
+│   └── 9.lvl
 ├── sounds/
 │   ├── music/
 │   │   ├── 01..04.mp3 - музыка
