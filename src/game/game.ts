@@ -148,7 +148,7 @@ export class Game {
 
   restartLevel(): void {
     this.score = this.scoreAtLevelStart;
-    this.nextMilestone = Math.max(250, Math.ceil(this.score / 250) * 250 || 250);
+    this.nextMilestone = (Math.floor(this.score / 250) + 1) * 250;
     this.resetLevel();
   }
 

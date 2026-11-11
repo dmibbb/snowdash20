@@ -24,9 +24,9 @@ let mousePos: { x: number; y: number } | null = null;
 
 let canvasEl: HTMLCanvasElement | null = null;
 let logicalW = 800;
-let logicalH = 600;
+let logicalH = 560;
 
-export function initInput(canvas: HTMLCanvasElement, w = 800, h = 600): void {
+export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH): void {
   canvasEl = canvas;
   logicalW = w;
   logicalH = h;

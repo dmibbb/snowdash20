@@ -101,7 +101,6 @@ class AudioManager {
       first.currentTime = 0;
       first.volume = this.muted ? 0 : MUSIC_VOLUME;
       this.unlocked = true;
-      this.unlocked = true;
       console.log('[Audio] unlocked');
       if (this.pendingMusicId !== null) {
         const id = this.pendingMusicId;
