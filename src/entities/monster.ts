@@ -17,6 +17,7 @@ export class Monster {
   killed = false;
   private animTick = 0;
   private lastH = 'l';
+  private reservedCell: CellCoords | null = null;
 
   private readonly startCol: number;
   private readonly startRow: number;
@@ -31,7 +32,8 @@ export class Monster {
     this.y = row * TILE_SIZE;
     this.targetX = this.x;
     this.targetY = this.y;
-    this.direction = model === 2 ? 'left' : 'down';
+    this.direction = this.pickInitialDirection();
+    this.lastH = this.direction === 'right' ? 'r' : 'l';
   }
 
   reset(): void {
@@ -40,10 +42,11 @@ export class Monster {
     this.targetX = this.x;
     this.targetY = this.y;
     this.state = 'idle';
-    this.direction = this.model === 2 ? 'left' : 'down';
+    this.direction = this.pickInitialDirection();
     this.killed = false;
     this.animTick = 0;
-    this.lastH = 'l';
+    this.lastH = this.direction === 'right' ? 'r' : 'l';
+    this.reservedCell = null;
   }
 
   getCell(): CellCoords {
@@ -69,6 +72,7 @@ export class Monster {
       const delta = this.deltaOf(this.direction);
       this.targetX = (cell.col + delta.dc) * TILE_SIZE;
       this.targetY = (cell.row + delta.dr) * TILE_SIZE;
+      this.reservedCell = { col: cell.col + delta.dc, row: cell.row + delta.dr };
       this.state = 'moving';
     }
 
@@ -86,6 +90,7 @@ export class Monster {
 
       if (this.x === this.targetX && this.y === this.targetY) {
         this.state = 'idle';
+        this.reservedCell = null;
       }
 
       if (this.direction === 'left') this.lastH = 'l';
@@ -97,6 +102,11 @@ export class Monster {
         this.animTick = 0;
       }
     }
+  }
+
+  private pickInitialDirection(): Direction {
+    const pool = this.model === 2 ? DIRECTIONS_HORIZONTAL : DIRECTIONS_ALL;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   private canMove(
@@ -122,6 +132,12 @@ export class Monster {
       if (m === this || m.killed) continue;
       const mc = m.getCell();
       if (mc.col === col && mc.row === row) return false;
+      // Another monster has already committed to moving into this cell.
+      // Without this, two monsters walking toward each other would both
+      // target the same middle cell and pass through each other.
+      if (m.reservedCell && m.reservedCell.col === col && m.reservedCell.row === row) {
+        return false;
+      }
     }
 
     return true;

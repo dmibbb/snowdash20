@@ -10,6 +10,7 @@ export interface MonsterStart {
 
 export interface ParsedLevel {
   grid: TileType[][];
+  name: string | null;
   start: CellCoords;
   stoneStarts: CellCoords[];
   monsterStarts: MonsterStart[];
@@ -23,8 +24,15 @@ export function parseLevel(text: string): ParsedLevel {
   // Split and clean lines
   const lines = clean
     .split('\n')
-    .map((l) => l.replace(/\r$/, ''))
+    .map((l) => l.replace(/\r$/, '').replace(/\s+$/, ''))
     .filter((l) => l.trim() !== '');
+
+  // Optional first line: ":Level Name". If absent — level has no name.
+  let name: string | null = null;
+  if (lines.length > 0 && lines[0].startsWith(':')) {
+    name = lines[0].substring(1).trim() || null;
+    lines.shift();
+  }
 
   if (lines.length !== GRID_ROWS) {
     const preview = lines.map((l, i) => `  ${i}: |${l}|`).join('\n');
@@ -41,10 +49,8 @@ export function parseLevel(text: string): ParsedLevel {
 
   for (let row = 0; row < GRID_ROWS; row++) {
     const line = lines[row];
-    if (line.length > GRID_COLS) {
-      throw new Error(
-        `Row ${row} too long: ${line.length} chars (expected ${GRID_COLS}): |${line}|`,
-      );
+    if (line.length !== GRID_COLS) {
+      throw new Error(`Row ${row}: expected ${GRID_COLS} chars, got ${line.length}: |${line}|`);
     }
 
     const rowArr: TileType[] = [];
@@ -91,5 +97,5 @@ export function parseLevel(text: string): ParsedLevel {
   }
 
   if (!start) throw new Error('No P marker found');
-  return { grid, start, stoneStarts, monsterStarts, chestsCount };
+  return { grid, name, start, stoneStarts, monsterStarts, chestsCount };
 }

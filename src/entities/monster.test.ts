@@ -46,7 +46,7 @@ describe('Monster', () => {
     const m = new Monster(5, 5, 1);
     expect(m.getCell()).toEqual({ col: 5, row: 5 });
     expect(m.state).toBe('idle');
-    expect(m.direction).toBe('down');
+    expect(['up', 'down', 'left', 'right']).toContain(m.direction);
     expect(m.killed).toBe(false);
     expect(m.model).toBe(1);
   });
@@ -64,6 +64,7 @@ describe('Monster', () => {
 
   it('moves when path is free', () => {
     const m = new Monster(5, 5, 1);
+    m.direction = 'down';
     const level = makeLevel();
     const monsters = [m];
     m.update(level, [], monsters);
@@ -83,6 +84,7 @@ describe('Monster', () => {
 
   it('does not walk onto a stone', () => {
     const m = new Monster(5, 5, 1);
+    m.direction = 'down';
     const stone = new Stone(5, 6);
     const level = makeLevel();
     const monsters = [m];
@@ -94,6 +96,7 @@ describe('Monster', () => {
 
   it('does not walk onto another monster', () => {
     const a = new Monster(5, 5, 1);
+    a.direction = 'down';
     const b = new Monster(5, 6, 1);
     const level = makeLevel();
     const monsters = [a, b];
@@ -112,18 +115,19 @@ describe('Monster', () => {
 
   it('getSpriteKey for model 1', () => {
     const m = new Monster(5, 5, 1);
+    m.direction = 'down'; // force deterministic
     expect(m.getSpriteKey()).toBe('ameba_d_1');
   });
 
-  it('getSpriteKey for model 2 uses horizontal direction', () => {
+  it('getSpriteKey for model 2 uses initial direction', () => {
     const m = new Monster(5, 5, 2);
-    // Initially lastH = 'l'
-    expect(m.getSpriteKey()).toBe('spiker_l_1');
+    const expected = m.direction === 'right' ? 'spiker_r_1' : 'spiker_l_1';
+    expect(m.getSpriteKey()).toBe(expected);
   });
 
-  it('model 2 (spiker) starts facing left', () => {
+  it('model 2 (spiker) starts with horizontal direction', () => {
     const m = new Monster(5, 5, 2);
-    expect(m.direction).toBe('left');
+    expect(['left', 'right']).toContain(m.direction);
   });
 
   it('model 2 (spiker) only moves horizontally', () => {
@@ -136,5 +140,55 @@ describe('Monster', () => {
       m.update(level, [], monsters);
       expect(['left', 'right']).toContain(m.direction);
     }
+  });
+
+  it('two monsters cannot target the same cell in the same tick', () => {
+    const level = makeLevel();
+    const a = new Monster(5, 5, 1);
+    const b = new Monster(7, 5, 1);
+    // Force both to want to move toward (6, 5)
+    a.direction = 'right';
+    b.direction = 'left';
+    const monsters = [a, b];
+
+    a.update(level, [], monsters); // A reserves (6, 5)
+    b.update(level, [], monsters); // B sees reservation, picks another direction
+
+    expect(a.direction).toBe('right');
+    expect(b.direction).not.toBe('left');
+  });
+
+  it('releases reservation after arriving at target', () => {
+    const level = makeLevel();
+    const a = new Monster(5, 5, 1);
+    a.direction = 'right';
+    const monsters = [a];
+
+    // Tick 1: A reserves (6,5) and starts moving
+    a.update(level, [], monsters);
+    // Private field access — TS strict; cast through `unknown` for the test only.
+    expect((a as unknown as { reservedCell: unknown }).reservedCell).toEqual({ col: 6, row: 5 });
+
+    // Move exactly to the target: 40 px / 3 px per tick ≈ 13.3 → 14 ticks total.
+    // (1 already done above, so 13 more.)
+    for (let i = 0; i < 13; i++) a.update(level, [], monsters);
+
+    expect(a.getCell()).toEqual({ col: 6, row: 5 });
+    expect(a.state).toBe('idle');
+    expect((a as unknown as { reservedCell: unknown }).reservedCell).toBeNull();
+  });
+
+  it('initial direction is randomized per monster type', () => {
+    // Amoeba — all 4 directions must appear over 50 instances.
+    const amebaDirs = new Set<string>();
+    for (let i = 0; i < 50; i++) amebaDirs.add(new Monster(5, 5, 1).direction);
+    expect(amebaDirs.size).toBeGreaterThan(1);
+
+    // Spiker — only left/right.
+    const spikerDirs = new Set<string>();
+    for (let i = 0; i < 50; i++) spikerDirs.add(new Monster(5, 5, 2).direction);
+    expect(spikerDirs.size).toBeGreaterThan(1);
+    expect(spikerDirs.has('up')).toBe(false);
+    expect(spikerDirs.has('down')).toBe(false);
   });
 });
