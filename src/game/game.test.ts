@@ -132,7 +132,7 @@ describe('Game', () => {
     expect(game.isGameOver).toBe(true);
   });
 
-  it('level complete → +50, next level loaded', async () => {
+  it('level complete → +50, pendingLevelComplete, next level loaded after advance', async () => {
     const game = new Game(['/1', '/2'], makeFetcher([LEVEL_NO_CHEST, LEVEL_WITH_CHEST]));
     await game.start();
     expect(game.visibleChests).toBe(0);
@@ -140,22 +140,33 @@ describe('Game', () => {
     game.tick(null);
 
     expect(game.score).toBe(50);
+    expect(game.pendingLevelComplete).toBe(true);
+    expect(game.levelIndex).toBe(0); // still on level 1 — waiting for Continue
     expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
 
+    game.advanceToNextLevel();
     await flushAsync();
 
+    expect(game.pendingLevelComplete).toBe(false);
     expect(game.levelIndex).toBe(1);
     expect(game.visibleChests).toBe(1);
   });
 
-  it('last level complete → GameOver', async () => {
+  it('last level complete → GameOver on advance', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_NO_CHEST]));
     await game.start();
 
     game.tick(null);
 
     expect(game.score).toBe(50);
+    expect(game.pendingLevelComplete).toBe(true);
+    expect(game.isGameOver).toBe(false); // wait for Continue
+
+    game.advanceToNextLevel();
+
+    expect(game.pendingLevelComplete).toBe(false);
     expect(game.isGameOver).toBe(true);
+    expect(game.victory).toBe(true);
   });
 
   it('milestone 250 plays sfx 11 exactly once', async () => {
@@ -230,5 +241,38 @@ describe('Game', () => {
     game.tick(null);
 
     expect(game.score).toBe(scoreBefore);
+  });
+
+  it('tick is no-op while pendingLevelComplete', async () => {
+    const game = new Game(['/1', '/2'], makeFetcher([LEVEL_NO_CHEST, LEVEL_WITH_CHEST]));
+    await game.start();
+    game.tick(null); // triggers onLevelComplete
+    expect(game.pendingLevelComplete).toBe(true);
+
+    const scoreBefore = game.score;
+    game.tick(null); // should be no-op
+
+    expect(game.score).toBe(scoreBefore);
+    expect(game.levelIndex).toBe(0);
+  });
+
+  it('isLastLevel reflects current index', async () => {
+    const game = new Game(['/1', '/2'], makeFetcher([LEVEL_WITH_CHEST, LEVEL_WITH_CHEST]));
+    await game.start();
+    expect(game.isLastLevel()).toBe(false);
+
+    await game.loadLevel(1);
+    expect(game.isLastLevel()).toBe(true);
+  });
+
+  it('advanceToNextLevel sets victory on last level', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_NO_CHEST]));
+    await game.start();
+    game.tick(null); // pendingLevelComplete = true
+
+    game.advanceToNextLevel();
+
+    expect(game.isGameOver).toBe(true);
+    expect(game.victory).toBe(true);
   });
 });

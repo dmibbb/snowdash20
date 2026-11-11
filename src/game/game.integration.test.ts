@@ -103,25 +103,36 @@ describe('Game integration', () => {
     expect(audio.playSfxCyclic).toHaveBeenCalledWith(12, 19);
 
     // Level complete fires in the SAME tick as chest consumption:
-    // score = 30 (chest) + 50 (bonus) = 80
+    // score = 30 (chest) + 50 (bonus) = 80, level stays on 1 until Continue
     expect(game.score).toBe(80);
+    expect(game.pendingLevelComplete).toBe(true);
+    expect(game.levelIndex).toBe(0);
     expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
 
+    // Simulate Continue button
+    game.advanceToNextLevel();
     await flushAsync();
 
+    expect(game.pendingLevelComplete).toBe(false);
     expect(game.levelIndex).toBe(1);
     expect(game.visibleChests).toBe(1);
   });
 
-  it('passes the last level → GameOver', async () => {
+  it('passes the last level → GameOver on advance', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_ONE]));
     await game.start();
 
     walkRight(game); // snow
-    walkRight(game); // chest
+    walkRight(game); // chest + level complete
 
     expect(game.score).toBe(80);
+    expect(game.pendingLevelComplete).toBe(true);
+    expect(game.isGameOver).toBe(false);
+
+    game.advanceToNextLevel();
+
     expect(game.isGameOver).toBe(true);
+    expect(game.victory).toBe(true);
   });
 
   it('walks into a monster → loses life, level resets', async () => {

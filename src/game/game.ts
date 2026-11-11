@@ -19,6 +19,8 @@ export class Game {
   stones: Stone[] = [];
   monsters: Monster[] = [];
   isGameOver = false;
+  pendingLevelComplete = false;
+  victory = false;
 
   private loading = false;
   private nextMilestone = 250;
@@ -52,6 +54,7 @@ export class Game {
       this.levelIndex = index;
     } catch (err) {
       console.error('[Game] Failed to load level', index, err);
+      this.pendingLevelComplete = false;
       this.isGameOver = true;
     } finally {
       this.loading = false;
@@ -59,7 +62,7 @@ export class Game {
   }
 
   tick(input: Direction | null): void {
-    if (this.isGameOver || this.loading) return;
+    if (this.isGameOver || this.loading || this.pendingLevelComplete) return;
     if (!this.level || !this.player) return;
 
     this.player.update(input, this.level, this, this.stones, this.monsters);
@@ -128,12 +131,23 @@ export class Game {
   private onLevelComplete(): void {
     audio.playSfx(30); // Level Done
     this.score += LEVEL_BONUS;
+    this.pendingLevelComplete = true;
+  }
+
+  // Called from LevelComplete mode's Continue/OK button.
+  advanceToNextLevel(): void {
+    this.pendingLevelComplete = false;
     const nextIndex = this.levelIndex + 1;
     if (nextIndex >= this.levelPaths.length) {
+      this.victory = true;
       this.isGameOver = true;
       return;
     }
     void this.loadLevel(nextIndex);
+  }
+
+  isLastLevel(): boolean {
+    return this.levelIndex >= this.levelPaths.length - 1;
   }
 
   private resetLevel(): void {

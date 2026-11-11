@@ -3,7 +3,7 @@ const SFX_IDS = [
   11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
   38,
 ];
-const MUSIC_VOLUME = 0.75;
+const MUSIC_VOLUME = 0.5;
 
 // Playlist map from SPEC 13.1. Track 01 is looped (no transition);
 // 02 → 03 → 04 → 02 cycle.
@@ -145,6 +145,15 @@ class AudioManager {
       }
       console.warn(`[Audio] playMusic(${id}) rejected:`, err);
     });
+  }
+
+  // Called when entering Playing. If a gameplay track (2/3/4) is already playing
+  // (e.g. returning from the Level Complete screen), keep it. Otherwise start track 2.
+  enterGameplay(): void {
+    const gameplay = [2, 3, 4];
+    if (this.currentMusicId === null || !gameplay.includes(this.currentMusicId)) {
+      this.playMusic(2);
+    }
   }
 
   stopMusic(): void {

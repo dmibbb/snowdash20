@@ -23,6 +23,7 @@ import { createGameOver } from './modes/gameover';
 import { createSplash } from './modes/splash';
 import { audio } from './audio/audio';
 import { assets } from './assets/loader';
+import { createLevelComplete } from './modes/levelcomplete';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -120,12 +121,11 @@ async function main(): Promise<void> {
       paused = false;
       hoverPauseMenu = false;
       consumePause();
-      audio.playMusic(2);
+      audio.enterGameplay();
     },
     onExit: () => {
       paused = false;
       audio.setPaused(false);
-      audio.stopMusic();
     },
     tick: () => {
       if (consumePause()) {
@@ -154,6 +154,8 @@ async function main(): Promise<void> {
       game?.tick(getDirection());
       if (game?.isGameOver) {
         machine.setMode('gameover');
+      } else if (game?.pendingLevelComplete) {
+        machine.setMode('levelcomplete');
       }
     },
     render: (c) => {
@@ -211,6 +213,21 @@ async function main(): Promise<void> {
       getGame: () => game,
       onBack: () => {
         machine.setMode('menu');
+      },
+    }),
+  );
+
+  machine.register(
+    'levelcomplete',
+    createLevelComplete({
+      getGame: () => game,
+      onContinue: () => {
+        game?.advanceToNextLevel();
+        if (game?.isGameOver) {
+          machine.setMode('gameover');
+        } else {
+          machine.setMode('playing');
+        }
       },
     }),
   );

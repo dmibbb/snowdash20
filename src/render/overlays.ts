@@ -190,9 +190,9 @@ export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): 
   } else {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#e74c3c';
+    ctx.fillStyle = game.victory ? '#ffd700' : '#e74c3c';
     ctx.font = 'bold 64px monospace';
-    ctx.fillText('GAME OVER', cx, cy - 80);
+    ctx.fillText(game.victory ? 'CONGRATULATIONS!' : 'GAME OVER', cx, cy - 80);
   }
 
   // Draw text stats
@@ -202,4 +202,27 @@ export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): 
   ctx.font = '24px monospace';
   ctx.fillText(`Score: ${game.score}`, cx, cy + 20);
   ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, cy + 60);
+}
+
+export function drawLevelCompleteOverlay(ctx: CanvasRenderingContext2D, game: Game): void {
+  const fieldHeight = GRID_ROWS * TILE_SIZE;
+  const cx = CANVAS_WIDTH / 2;
+  const cy = fieldHeight / 2;
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, fieldHeight);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 36px monospace';
+  ctx.fillText('Congratulations!', cx, cy - 90);
+
+  ctx.fillStyle = '#ecf0f1';
+  ctx.font = 'bold 28px monospace';
+  ctx.fillText(`LEVEL ${game.levelIndex + 1} DONE!`, cx, cy - 30);
+
+  ctx.font = '22px monospace';
+  ctx.fillText(`Your score: ${game.score}`, cx, cy + 20);
 }
