@@ -225,4 +225,13 @@ export function drawLevelCompleteOverlay(ctx: CanvasRenderingContext2D, game: Ga
 
   ctx.font = '22px monospace';
   ctx.fillText(`Your score: ${game.score}`, cx, cy + 20);
+
+  // Hint
+  ctx.font = 'bold 16px monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(
+    game.isLastLevel() ? 'Press any key to finish' : 'Press any key to continue',
+    cx,
+    fieldHeight - 30,
+  );
 }
