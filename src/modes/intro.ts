@@ -13,11 +13,11 @@ interface IntroElement {
 }
 
 const ELEMENTS_DEF: IntroElement[] = [
-  { key: 'R', startX: -480, startY: 65, targetX: 200, targetY: 65, speed: 5 },
+  { key: 'R', startX: -480, startY: 65, targetX: 200, targetY: 65, speed: 4 },
   { key: 'G', startX: 323, startY: -400, targetX: 323, targetY: 65, speed: 3 },
-  { key: 'B', startX: 1100, startY: 65, targetX: 480, targetY: 65, speed: 5 },
+  { key: 'B', startX: 1100, startY: 65, targetX: 480, targetY: 65, speed: 4 },
   { key: 'team', startX: 275, startY: 980, targetX: 275, targetY: 430, speed: 3 },
-  { key: 'prezents', startX: 2300, startY: 280, targetX: 150, targetY: 280, speed: 7 },
+  { key: 'prezents', startX: 2300, startY: 280, targetX: 150, targetY: 280, speed: 6 },
 ];
 
 interface RuntimeElement extends IntroElement {
@@ -38,7 +38,7 @@ export function createIntro(callbacks: IntroCallbacks): ModeHooks {
     settled: false,
   }));
   let settledTicks = 0;
-  const SETTLE_DELAY_TICKS = 10; // 500ms pause after all elements land
+  const SETTLE_DELAY_TICKS = 64;
 
   function reset(): void {
     for (let i = 0; i < elements.length; i++) {
