@@ -4,25 +4,14 @@ import { getRating } from '../game/rating';
 import { assets } from '../assets/loader';
 import { drawButton, type ButtonRect } from './button';
 
-export const PAUSE_RESTART_BUTTON: ButtonRect = {
-  x: CANVAS_WIDTH / 2 - 100,
-  y: (GRID_ROWS * TILE_SIZE) / 2 + 80,
-  w: 200,
-  h: 50,
-};
-
 export const PAUSE_MENU_BUTTON: ButtonRect = {
   x: CANVAS_WIDTH / 2 - 100,
-  y: (GRID_ROWS * TILE_SIZE) / 2 + 140,
+  y: (GRID_ROWS * TILE_SIZE) / 2 + 175,
   w: 200,
   h: 50,
 };
 
-export function drawPauseOverlay(
-  ctx: CanvasRenderingContext2D,
-  hoveredRestartBtn: boolean,
-  hoveredMenuBtn: boolean,
-): void {
+export function drawPauseOverlay(ctx: CanvasRenderingContext2D, hoveredMenuBtn: boolean): void {
   const fieldHeight = GRID_ROWS * TILE_SIZE;
   const centerY = fieldHeight / 2;
 
@@ -49,9 +38,9 @@ export function drawPauseOverlay(
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(236, 240, 241, 0.7)';
   ctx.font = '16px monospace';
-  ctx.fillText('Press Esc or P to resume', CANVAS_WIDTH / 2, centerY + 40);
+  ctx.fillText('Press Esc or P to resume', CANVAS_WIDTH / 2, centerY + 35);
+  ctx.fillText('Press R to restart (−200 pts)', CANVAS_WIDTH / 2, centerY + 58);
 
-  drawButton(ctx, PAUSE_RESTART_BUTTON, '[ Restart Level ]', hoveredRestartBtn, 20);
   drawButton(ctx, PAUSE_MENU_BUTTON, '[ Back to Main Menu ]', hoveredMenuBtn, 20);
 }
 

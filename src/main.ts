@@ -9,13 +9,14 @@ import {
   consumeConfirm,
   consumeClick,
   consumeNextTrack,
+  consumeRestart,
   getMousePosition,
 } from './input/input';
 import { isPointInRect } from './render/button';
 import { Game } from './game/game';
 import { ModeMachine } from './game/modeMachine';
 import { render as renderGame } from './render/renderer';
-import { drawPauseOverlay, PAUSE_MENU_BUTTON, PAUSE_RESTART_BUTTON } from './render/overlays';
+import { drawPauseOverlay, PAUSE_MENU_BUTTON } from './render/overlays';
 import { createMenu } from './modes/menu';
 import { createHelp } from './modes/help';
 import { createIntro } from './modes/intro';
@@ -121,23 +122,32 @@ async function main(): Promise<void> {
 
   let paused = false;
   let hoverPauseMenu = false;
-  let hoverPauseRestart = false;
 
   machine.register('playing', {
     onEnter: () => {
       paused = false;
       hoverPauseMenu = false;
-      hoverPauseRestart = false;
       consumePause();
+      consumeRestart();
+      consumeNextTrack();
       audio.enterGameplay();
     },
     onExit: () => {
       paused = false;
       hoverPauseMenu = false;
-      hoverPauseRestart = false;
       audio.setPaused(false);
     },
     tick: () => {
+      if (consumeRestart()) {
+        audio.stopAllSfx();
+        paused = false;
+        hoverPauseMenu = false;
+        audio.setPaused(false);
+        game?.restartLevel();
+        audio.playSfx(31); // click
+        return;
+      }
+
       if (consumePause()) {
         paused = !paused;
         audio.setPaused(paused);
@@ -147,22 +157,9 @@ async function main(): Promise<void> {
       if (paused) {
         consumeNextTrack();
         const mouse = getMousePosition();
-        hoverPauseRestart = mouse ? isPointInRect(mouse, PAUSE_RESTART_BUTTON) : false;
         hoverPauseMenu = mouse ? isPointInRect(mouse, PAUSE_MENU_BUTTON) : false;
 
         const click = consumeClick();
-
-        if (click && isPointInRect(click, PAUSE_RESTART_BUTTON)) {
-          audio.stopAllSfx();
-          game?.restartLevel();
-          paused = false;
-          hoverPauseRestart = false;
-          hoverPauseMenu = false;
-          audio.setPaused(false);
-          audio.playSfx(31); // click feedback after unpause
-          return;
-        }
-
         if (click && isPointInRect(click, PAUSE_MENU_BUTTON)) {
           audio.stopAllSfx();
           audio.playSfx(31);
@@ -186,7 +183,7 @@ async function main(): Promise<void> {
     },
     render: (c) => {
       if (game) renderGame(c, game);
-      if (paused) drawPauseOverlay(c, hoverPauseRestart, hoverPauseMenu);
+      if (paused) drawPauseOverlay(c, hoverPauseMenu);
     },
   });
 

@@ -25,7 +25,6 @@ export class Game {
 
   private loading = false;
   private nextMilestone = 250;
-  private scoreAtLevelStart = 0;
   private readonly levelPaths: string[];
   private readonly fetchLevel: LevelFetcher;
 
@@ -54,7 +53,6 @@ export class Game {
       this.monsters = parsed.monsterStarts.map((m) => new Monster(m.col, m.row, m.model));
       this.visibleChests = parsed.chestsCount;
       this.levelIndex = index;
-      this.scoreAtLevelStart = this.score;
     } catch (err) {
       console.error('[Game] Failed to load level', index, err);
       this.pendingLevelComplete = false;
@@ -147,8 +145,7 @@ export class Game {
   }
 
   restartLevel(): void {
-    this.score = this.scoreAtLevelStart;
-    this.nextMilestone = (Math.floor(this.score / 250) + 1) * 250;
+    this.score = Math.max(0, this.score - 200);
     this.resetLevel();
   }
 

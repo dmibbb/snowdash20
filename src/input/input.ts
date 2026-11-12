@@ -18,6 +18,7 @@ let pendingConfirm = false;
 let pendingPause = false;
 let pendingMute = false;
 let pendingNextTrack = false;
+let pendingRestart = false;
 let pendingAnyKey = false;
 let pendingClick: { x: number; y: number } | null = null;
 let mousePos: { x: number; y: number } | null = null;
@@ -51,6 +52,8 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
       pendingMute = true;
     } else if (e.code === 'KeyN') {
       pendingNextTrack = true;
+    } else if (e.code === 'KeyR') {
+      pendingRestart = true;
     }
   });
 
@@ -137,5 +140,11 @@ export function getMousePosition(): { x: number; y: number } | null {
 export function consumeAnyKey(): boolean {
   const v = pendingAnyKey;
   pendingAnyKey = false;
+  return v;
+}
+
+export function consumeRestart(): boolean {
+  const v = pendingRestart;
+  pendingRestart = false;
   return v;
 }

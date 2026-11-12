@@ -298,4 +298,36 @@ describe('Game', () => {
     expect(stone.state).toBe('idle');
     expect(stone.y).toBe(11 * 40); // landed at row 11 (y=440)
   });
+
+  it('restartLevel applies a flat −200 score penalty', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
+    await game.start();
+    game.score = 500;
+    game.restartLevel();
+    expect(game.score).toBe(300);
+  });
+
+  it('restartLevel floors score at 0', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
+    await game.start();
+    game.score = 100;
+    game.restartLevel();
+    expect(game.score).toBe(0);
+  });
+
+  it('restartLevel does not rewind the milestone tracker', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
+    await game.start();
+
+    game.score = 500;
+    game.tick(null); // fires 250 + 500 milestones, tracker → 750
+    vi.clearAllMocks();
+
+    game.score = 600;
+    game.restartLevel(); // → 400
+    game.score = 500; // back above 250/500
+    game.tick(null);
+
+    expect(audio.playSfx).not.toHaveBeenCalledWith(11);
+  });
 });
