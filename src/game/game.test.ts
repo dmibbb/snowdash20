@@ -50,6 +50,23 @@ const LEVEL_NO_CHEST = [
   'BBBBBBBBBBBBBBBBBBBB',
 ].join('\n');
 
+// Two monsters trapped in a 1-cell-wide pit column
+const MULTI_KILL_LEVEL = [
+  'BBBBBBBBBBBBBBBBBBBB',
+  'BC.................B',
+  'B..................B',
+  'B.......K..........B',
+  'B......BMB.........B',
+  'B......BMB.........B',
+  'B......BBB.........B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B.......P..........B',
+  'BBBBBBBBBBBBBBBBBBBB',
+].join('\n');
+
 function makeFetcher(levels: string[]): (path: string) => Promise<string> {
   return async (path: string) => {
     const idx = Number(path.match(/(\d+)/)?.[1] ?? 1) - 1;
@@ -348,5 +365,28 @@ describe('Game', () => {
     expect(game.pendingLevelComplete).toBe(true);
     expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
     expect(audio.playSfx).toHaveBeenCalledWith(11); // 250 Points
+  });
+
+  it('falling stone kills a vertical stack of two monsters — one SFX and one score per kill', async () => {
+    const game = new Game(['/1'], makeFetcher([MULTI_KILL_LEVEL]));
+    await game.start();
+    vi.clearAllMocks();
+
+    expect(game.monsters.length).toBe(2);
+    expect(game.monsters.every((m) => !m.killed)).toBe(true);
+    expect(game.score).toBe(0);
+
+    // 30 ticks is plenty: stone falls 2 cells (10 ticks) + margin.
+    // Monsters are trapped (all 4 neighbours blocked), so they can't dodge.
+    for (let i = 0; i < 30; i++) game.tick(null);
+
+    expect(game.monsters[0].killed).toBe(true);
+    expect(game.monsters[1].killed).toBe(true);
+    expect(game.score).toBe(70); // 35 + 35 (both model 1)
+
+    const enemyDieCalls = vi
+      .mocked(audio.playSfxCyclic)
+      .mock.calls.filter(([from, to]) => from === 20 && to === 23);
+    expect(enemyDieCalls.length).toBe(2);
   });
 });

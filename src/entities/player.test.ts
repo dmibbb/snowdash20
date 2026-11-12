@@ -33,8 +33,24 @@ const PLAYER_LEVEL = [
   'BBBBBBBBBBBBBBBBBBBB',
 ].join('\n');
 
-function makeLevel(): Level {
-  return new Level(parseLevel(PLAYER_LEVEL));
+const BLOCKED_BY_STONE_LEVEL = [
+  'BBBBBBBBBBBBBBBBBBBB',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B...P.B............B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'B..................B',
+  'BBBBBBBBBBBBBBBBBBBB',
+].join('\n');
+
+function makeLevel(text: string = PLAYER_LEVEL): Level {
+  return new Level(parseLevel(text));
 }
 
 function makeGame() {
@@ -188,5 +204,31 @@ describe('Player', () => {
 
     expect(game.visibleChests).toBe(0);
     expect(audio.playSfxCyclic).not.toHaveBeenCalledWith(12, 19);
+  });
+
+  it('blocked by idle stone that cannot be pushed', () => {
+    const level = makeLevel(BLOCKED_BY_STONE_LEVEL);
+    const game = makeGame();
+    const stone = new Stone(5, 4);
+    const p = new Player(4, 4);
+
+    p.update('right', level, game as unknown as Game, [stone], []);
+
+    expect(p.x).toBe(4 * 40); // did not move
+    expect(p.y).toBe(4 * 40);
+    expect(p.state).toBe('idle');
+    expect(stone.state).toBe('idle'); // push was rejected
+  });
+
+  it('follows a stone when push succeeds', () => {
+    const level = makeLevel();
+    const game = makeGame();
+    const stone = new Stone(5, 4);
+    const p = new Player(4, 4);
+
+    p.update('right', level, game as unknown as Game, [stone], []);
+
+    expect(p.state).toBe('moving'); // started walking into (5,4)
+    expect(stone.state).toBe('pushed'); // and pushed the stone toward (6,4)
   });
 });
