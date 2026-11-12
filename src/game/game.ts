@@ -127,11 +127,6 @@ export class Game {
   // Called externally (from Player when it walks into a monster, and internally).
   onPlayerHit(): void {
     this.lives -= 1;
-    if (this.lives <= 0) {
-      // Final death: no hero die jingle — GameOver plays "Your Score" instead
-      this.isGameOver = true;
-      return;
-    }
     audio.playSfxCyclic(26, 29);
     this.pendingHeroDeath = true;
   }
@@ -141,6 +136,10 @@ export class Game {
   resolveHeroDeath(): void {
     if (!this.pendingHeroDeath) return;
     this.pendingHeroDeath = false;
+    if (this.lives <= 0) {
+      this.isGameOver = true;
+      return;
+    }
     this.resetLevel();
   }
 

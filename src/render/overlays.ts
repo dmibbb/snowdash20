@@ -210,13 +210,19 @@ export function drawGameOverOverlay(ctx: CanvasRenderingContext2D, game: Game): 
     ctx.fillText(game.victory ? 'CONGRATULATIONS!' : 'GAME OVER', cx, cy - 80);
   }
 
-  // Draw text stats
+  if (game.victory) {
+    drawGlowingText(ctx, 'Well done, Mr. Snejok!', cx, cy, 28);
+  }
+
+  // Stats
+  const scoreY = game.victory ? cy + 50 : cy + 20;
+  const ratingY = game.victory ? cy + 90 : cy + 60;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ecf0f1';
   ctx.font = '24px monospace';
-  ctx.fillText(`Score: ${game.score}`, cx, cy + 20);
-  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, cy + 60);
+  ctx.fillText(`Score: ${game.score}`, cx, scoreY);
+  ctx.fillText(`Rating: ${getRating(game.levelIndex)}`, cx, ratingY);
 }
 
 export function drawLevelCompleteOverlay(ctx: CanvasRenderingContext2D, game: Game): void {

@@ -32,7 +32,9 @@ export function createGameOver(callbacks: GameOverCallbacks): ModeHooks {
       consumePause();
       audio.stopAllSfx();
       audio.stopMusic();
-      audio.playSfx(38); // Your Score
+      if (callbacks.getGame()?.victory) {
+        audio.playSfx(38); // Your Score
+      }
     },
     tick: () => {
       const mouse = getMousePosition();

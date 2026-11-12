@@ -15,7 +15,7 @@ import { audio } from '../audio/audio';
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
 // Auto-dismiss after ~10-12 s. Player can skip with any input.
-const RIP_AUTO_DISMISS_TICKS = 500;
+const RIP_AUTO_DISMISS_TICKS = 670;
 
 export interface HeroDeathCallbacks {
   getGame: () => Game | null;
@@ -29,12 +29,12 @@ export function createHeroDeath(callbacks: HeroDeathCallbacks): ModeHooks {
   function resolve(): void {
     if (resolved) return;
     resolved = true;
-    // Kill any lingering SFX (hero die 26-29 still playing) so it doesn't
-    // leak into the next Playing/GameOver mode.
     audio.stopAllSfx();
-    audio.resumeMusic();
     const game = callbacks.getGame();
     game?.resolveHeroDeath();
+    if (!game?.isGameOver) {
+      audio.resumeMusic();
+    }
     callbacks.onDone();
   }
 

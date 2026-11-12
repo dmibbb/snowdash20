@@ -140,7 +140,7 @@ describe('Game', () => {
     expect(audio.playSfxCyclic).toHaveBeenCalledWith(26, 29);
   });
 
-  it('onPlayerHit at 1 life → GameOver immediately (no RIP)', async () => {
+  it('onPlayerHit at 1 life → pendingHeroDeath, GameOver after resolve', async () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
     await game.start();
     game.lives = 1;
@@ -148,6 +148,11 @@ describe('Game', () => {
     game.onPlayerHit();
 
     expect(game.lives).toBe(0);
+    expect(game.isGameOver).toBe(false);
+    expect(game.pendingHeroDeath).toBe(true);
+
+    game.resolveHeroDeath();
+
     expect(game.isGameOver).toBe(true);
     expect(game.pendingHeroDeath).toBe(false);
   });

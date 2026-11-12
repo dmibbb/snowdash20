@@ -11,6 +11,7 @@ const SFX_VOLUMES: Record<number, number> = {
   26: 0.75, // Hero Death 1
   27: 0.75, // Hero Death 2
   28: 0.75, // Hero Death 3
+  29: 0.75, // Hero Death 4
   38: 0.3, // "Your Score" jingle — half volume
 };
 
@@ -33,6 +34,7 @@ class AudioManager {
   private pendingMusicId: number | null = null;
   private cyclicIndices = new Map<string, number>();
   private sfxTimers = new Map<number, number>();
+  private trimTargets = new Set<number>();
 
   get isMuted(): boolean {
     return this.muted;
@@ -190,7 +192,7 @@ class AudioManager {
 
   // === SFX ===
 
-  playSfx(id: number): void {
+  playSfx(id: number, durationMs?: number): void {
     if (this.muted) return;
     if (this.paused) return;
 
@@ -207,34 +209,22 @@ class AudioManager {
     sound.play().catch((err) => {
       console.warn(`[Audio] playSfx(${id}) rejected:`, err);
     });
-  }
 
-  // Plays an SFX but stops it after `durationMs` (clipped playback).
-  // If the same SFX is triggered again before the timer fires, the old timer is cancelled.
-  playSfxForDuration(id: number, durationMs: number): void {
-    if (this.muted) return;
-    if (this.paused) return;
-
-    this.clearSfxTimer(id);
-
-    const sound = this.sfx.get(id);
-    if (!sound) {
-      console.warn(`[Audio] playSfxForDuration(${id}): not loaded`);
+    if (durationMs === undefined) {
+      // Full playback — cancel any pending trim from a previous call.
+      this.trimTargets.delete(id);
       return;
     }
 
-    sound.volume = SFX_VOLUMES[id] ?? 1;
-    sound.currentTime = 0;
-    sound.play().catch((err) => {
-      console.warn(`[Audio] playSfxForDuration(${id}) rejected:`, err);
-    });
-
+    this.trimTargets.add(id);
     const timerId = window.setTimeout(() => {
-      sound.pause();
-      sound.currentTime = 0;
+      if (this.trimTargets.has(id)) {
+        sound.pause();
+        sound.currentTime = 0;
+        this.trimTargets.delete(id);
+      }
       this.sfxTimers.delete(id);
     }, durationMs);
-
     this.sfxTimers.set(id, timerId);
   }
 
@@ -262,6 +252,9 @@ class AudioManager {
     for (const id of Array.from(this.sfxTimers.keys())) {
       this.clearSfxTimer(id);
     }
+
+    this.trimTargets.clear();
+
     for (const s of this.sfx.values()) {
       s.pause();
       s.currentTime = 0;
