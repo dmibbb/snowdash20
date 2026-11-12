@@ -9,18 +9,22 @@ body {
   width: 100%;
   height: 100%;
   background: #1a1a1a;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #app {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 20px 0;
   gap: 10px;
 }
+
+/* --- Game and header --- */
 
 canvas#game {
   width: 800px;
@@ -66,6 +70,14 @@ canvas#game {
   text-shadow: 0 0 6px rgba(74, 142, 216, 0.5);
 }
 
+.game-body {
+  position: relative;
+  width: 800px;
+  margin: 0 auto;
+}
+
+/* --- Footer --- */
+
 .site-footer {
   font-family: monospace;
   font-size: 14px;
@@ -97,11 +109,7 @@ canvas#game {
   text-decoration: underline;
 }
 
-.game-body {
-  position: relative;
-  width: 800px;
-  margin: 0 auto;
-}
+/* --- Side panels --- */
 
 .side-panel {
   position: absolute;
@@ -162,4 +170,135 @@ canvas#game {
   font-weight: bold;
   color: #00ddff;
   text-shadow: 0 0 4px rgba(0, 221, 255, 0.4);
+}
+
+/* --- About this port --- */
+
+.about-port {
+  max-width: 800px;
+  width: 100%;
+  margin: 24px auto 0;
+  font-family: 'Courier New', monospace;
+  color: #c0c0c0;
+  border: 1px solid rgba(74, 142, 216, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.about-port > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 20px;
+  background: rgba(74, 142, 216, 0.06);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #4a8ed8;
+  text-shadow: 0 0 6px rgba(74, 142, 216, 0.5);
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.about-port > summary::-webkit-details-marker { display: none; }
+
+.about-port > summary:hover {
+  background: rgba(74, 142, 216, 0.14);
+}
+
+.about-port-caret {
+  display: inline-block;
+  margin-right: 10px;
+  transition: transform 0.15s ease;
+  font-size: 10px;
+}
+
+.about-port[open] > summary .about-port-caret {
+  transform: rotate(90deg);
+}
+
+.about-port[open] > summary {
+  border-bottom: 1px solid rgba(74, 142, 216, 0.35);
+}
+
+.about-port-body {
+  padding: 20px 24px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.about-port-body h3 {
+  margin: 24px 0 12px;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #4a8ed8;
+  text-shadow: 0 0 6px rgba(74, 142, 216, 0.5);
+}
+
+.about-port-body h4 {
+  margin: 20px 0 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+
+.about-port-body p {
+  margin: 0 0 14px;
+}
+
+.about-port-body ul {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.about-port-body li {
+  margin-bottom: 8px;
+}
+
+.about-port-body b {
+  color: #00ddff;
+  text-shadow: 0 0 4px rgba(0, 221, 255, 0.4);
+}
+
+.rgb-r { color: #ff0000; font-weight: bold; }
+.rgb-g { color: #00ff00; font-weight: bold; }
+.rgb-b { color: #0000ff; font-weight: bold; }
+
+.rgb-team {
+  color: #0a0a0a;
+  font-weight: bold;
+  -webkit-text-stroke: 1px #ecf0f1;
+  text-shadow: 0 0 4px rgba(236, 240, 241, 0.3);
+}
+
+.about-port-figure {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.about-port-figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border: 1px solid rgba(74, 142, 216, 0.35);
+  border-radius: 4px;
+  background: #0a0a20;
+}
+
+.about-port-figure figcaption {
+  margin-top: 6px;
+  font-size: 12px;
+  font-style: italic;
+  color: #7a7a7a;
+}
+
+.about-port-figure img[src$=".png"] {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.about-port-figure img[src$=".jpg"] {
+  max-width: 480px;
 }

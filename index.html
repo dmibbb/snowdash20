@@ -17,10 +17,10 @@
         <h2>Controls</h2>
         <dl>
           <dt>Navigation</dt>
-          <dd>WASD / ⬆⬅⬇➡</dd>
+          <dd>W A S D / ⬆ ⬅ ⬇ ➡</dd>
           <dt>Pause (in-game)</dt>
           <dd>Esc / P</dd>
-          <dt>Restart level (−200)</dt>
+          <dt>Restart level (−200PTS)</dt>
           <dd>R</dd>
           <dt>Mute sounds and music</dt>
           <dd>M</dd>
@@ -28,28 +28,184 @@
           <dd>N</dd>
         </dl>
       </aside>
+
       <canvas id="game" width="800" height="560"></canvas>
+
       <aside class="side-panel objectives">
-        <h2>Objective</h2>
+        <h2>Objectives</h2>
         <p class="objective-intro">
           Oh no! Santa lost all his presents! Help him, Mr. Snejok!
         </p>
         <dl>
-          <dt>TO WIN</dt>
+          <dt>To win</dt>
           <dd>Collect every present in the level.</dd>
-          <dt>TO HELP YOU</dt>
+          <dt>To help you</dt>
           <dd>Eat snow to clear your path.</dd>
           <dd>Push boulders off ledges to crush monsters.</dd>
-          <dt>WATCH OUT</dt>
+          <dt>Watch out</dt>
           <dd>Any monster kills you on touch.</dd>
           <dd>So does a falling boulder.</dd>
-          <dt>LIVES</dt>
+          <dt>Lives</dt>
           <dd>You start with 4.</dd>
           <dd>Each death resets the level (presents return).</dd>
           <dd>Lose them all, and it's Game Over.</dd>
         </dl>
       </aside>
     </div>
+
+    <details class="about-port">
+      <summary>
+        <span class="about-port-caret">▸</span>
+        About this port
+      </summary>
+
+      <div class="about-port-body">
+        <h3>Hi there!</h3>
+
+        <p class="about-port-lead">
+          <b>Димасик</b> (<span class="rgb-b">B</span> from <span class="rgb-r">R</span><span class="rgb-g">G</span><span class="rgb-b">B</span> <span class="rgb-team">Team</span>
+          ) here 👋</br></br>Before you is a special web edition of the super-duper mega-cool 
+          game <b>SnowDash</b>. It was made by third- and then fifth-year students — 
+          <span class="rgb-r">R</span><span class="rgb-g">G</span><span class="rgb-b">B</span> <span class="rgb-team">Team</span>
+           — back in 2006/2008. Since the game became a bit of a meme in narrow circles (and 
+           a certain club of those who passed the compiler coursework, IYKYK), and the 20th 
+           anniversary is right around the corner, I decided to make a web port. With a lot 
+           of help from DeepSeek and a bit of Qwen, the Win32 C++ application was ported to 
+           the web (TS) in just a few evenings.
+        </p>
+
+        <h3>A bit of history</h3>
+
+        <h4>2006</h4>
+
+        <p>
+          A university "Computer Graphics" course. The assignment: make a computer game, or 
+          something like it. So the three of us teamed up and formed 
+          <span class="rgb-r">R</span><span class="rgb-g">G</span><span class="rgb-b">B</span> <span class="rgb-team">Team</span>
+          , named after our initials.
+        </p>
+
+        <figure class="about-port-figure">
+          <img src="/images/2006.png" alt="SnowDash 2006 ♥" loading="lazy">
+          <figcaption>SnowDash 2006 ♥</figcaption>
+        </figure>
+
+        <p>Young past-me was responsible for a few things (feel free to smack past-me on the head for any of them):</p>
+        <ul>
+          <li>
+            <b>"Wrote" the music.</b> All the cacophony you hear in the background is on 
+            me. Thanks to Hip-Hop eJay (great DAW, btw)! Unfortunately, I couldn't find 
+            the original files, so enjoy the 128 kbps MP3s. *Sad trombone noises...*
+          </li>
+          <li>
+            <b>Hooked up FMOD and handled all the sound.</b> All SFX were carefully cut 
+            and mixed in Sound Forge (another great tool, btw), if I remember correctly.
+          </li>
+          <li>
+            <b>All the visuals, too.</b> Every janky picture and animation was hand-drawn. 
+            I don't remember what I used — probably MS Paint, or something equally simple. 
+            What I do remember: the "borrowed" Jokerman font and Ulead COOL 3D. BTW, 
+            I hope you "enjoyed" the Help text 😂 (*cringe*)
+          </li>
+
+          <figure class="about-port-figure">
+            <img src="/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" loading="lazy">
+            <figcaption>Hand-drawn, no AI! Proofs :D</figcaption>
+          </figure>
+
+          <li>
+            <b>The 15-second unskippable intro</b> with the awesomely sliding letters.
+          </li>
+          <li>
+            <b>Other stuff</b> like game levels, the rating system, and a bunch of other 
+            code bits, IIRC.
+          </li>
+        </ul>
+
+        <h4>2008</h4>
+        <p>
+          We were allowed to reuse the project and submit it again for another course.
+          It was a "Promising Software" course (we have a very "promising" SnowDash here). 
+          The game got a bit of polish: upgraded to a newer C++ standard, added a 
+          skippable intro, and threw in various small fixes based on the feedback from '06.
+        </p>
+
+        <figure class="about-port-figure">
+          <img src="/images/2008.png" alt="SnowDash 2008. Feel the difference!" loading="lazy">
+          <figcaption>SnowDash 2008. Feel the difference!</figcaption>
+        </figure>
+
+        <h4>2026</h4>
+        <p>
+          Well, it's the AI era — why not practice writing a web application in TypeScript,
+          especially when you are not a frontend developer? Plus, the game is turning 
+          twenty :D. Why not make a proper web edition?
+        </p>
+
+        <figure class="about-port-figure">
+          <img src="/images/2026.png" alt="SnowDash: 20th Anniversary Edition. Feel the real difference!" loading="lazy">
+          <figcaption>SnowDash: 20th Anniversary Edition. Feel the real difference!</figcaption>
+        </figure>
+
+        <p>Luckily, I kept all my university stuff and even found the original uncompressed assets 
+          (except music and SFX, alas).</p>
+
+        <h3>What's different in the web version</h3>
+        <ul>
+          <li>
+            <b>Splash screen.</b> Browsers won't start audio without a user gesture, so
+            we need one. The same screen doubles as the Exit destination: in a Win32 app 
+            you just close the window, but in a browser, where would "Exit" even take you? 
+            So, Exit → Splash.
+          </li>
+          <li>
+            <b>Panels around the canvas.</b> Controls and Objectives are new. Back in 2006
+            we just explained all that in person during the demo. That doesn't work here.
+          </li>
+          <li>
+            <b>Level name overlay.</b> The Win32 version used the window title for the level 
+            name. Here it appears as an overlay before each level starts.
+          </li>
+          <li>
+            <b>Custom dialogs and overlays.</b> Windows MessageBoxes and alerts don't exist 
+            inside a canvas, so all popups are custom overlays drawn on it.
+          </li>
+          <li>
+            <b>60 Hz tick rate.</b> The original ran at a variable ~64 fps; now it's a fixed 
+            60 Hz tick and 60 FPS render — and it's actually smooth now. 🤯
+          </li>
+          <li>
+            <b>Track switch button.</b> The original had no such thing, and the "genius" music 
+            starts drilling into your skull after a few minutes (too many repetitive parts). 
+            I cut the volume in half and added an in-game track switch (N) in case you start 
+            feeling 🤢.
+          </li>
+          <li>
+            <b>All ten levels were updated</b>, and I've cleared every single one of them
+            individually (though I haven't done a full-game run yet). The catch: in the
+            original, the last column of the grid matrix was never drawn — the levels 
+            simply left it empty. Rebuilding them meant filling the last column, shifting 
+            and adding some things here and there.
+          </li>
+          <li>
+            <b>Random starting directions for enemies.</b> The originals always walked
+            in one preset direction, which felt stale.
+          </li>
+          <li>
+            <b>And small bug fixes</b> along the way — but the overall design, both technical
+            and visual, stays true to 2006.
+          </li>
+        </ul>
+
+        <h3>Thanks for playing</h3>
+        <p>
+          The SnowDash gestalt is finally closed.</br>Thanks for playing (if anyone in their 
+          right mind actually plays this — amen)
+        </p>
+
+        Sincerely,</br><b>Димасик</b>
+      </div>
+    </details>
 
     <footer class="site-footer">
       Made with <span class="heart">♥</span> by
