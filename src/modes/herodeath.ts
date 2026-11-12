@@ -14,8 +14,8 @@ import { audio } from '../audio/audio';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
-// Auto-dismiss after 250 ticks (~12.5 s). Player can skip with any input.
-const RIP_AUTO_DISMISS_TICKS = 250;
+// Auto-dismiss after ~10-12 s. Player can skip with any input.
+const RIP_AUTO_DISMISS_TICKS = 500;
 
 export interface HeroDeathCallbacks {
   getGame: () => Game | null;

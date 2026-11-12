@@ -13,7 +13,7 @@ import {
 import { audio } from '../audio/audio';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
-const TITLE_DURATION_TICKS = 40; // 2 seconds at 20 Hz
+const TITLE_DURATION_TICKS = 120;
 
 export interface LevelTitleCallbacks {
   getGame: () => Game | null;

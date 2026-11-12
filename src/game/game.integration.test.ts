@@ -63,7 +63,7 @@ function makeFetcher(levels: string[]): (path: string) => Promise<string> {
 // Walk right one full cell (8 ticks at PLAYER_SPEED=5 → 40px).
 // Then one more tick in idle so consumeCurrentTile fires on arrival.
 function walkRight(game: Game): void {
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 19; i++) {
     game.tick('right');
   }
   game.tick(null); // idle tick → consume

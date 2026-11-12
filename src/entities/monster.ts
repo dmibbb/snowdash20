@@ -144,7 +144,7 @@ export class Monster {
   }
 
   getSpriteKey(): string {
-    const frame = this.state === 'moving' ? (Math.floor(this.animTick / 3) % 2) + 1 : 1;
+    const frame = this.state === 'moving' ? (Math.floor(this.animTick / 9) % 2) + 1 : 1;
 
     if (this.model === 1) {
       const d = this.direction === 'stop' ? 'd' : this.direction[0];

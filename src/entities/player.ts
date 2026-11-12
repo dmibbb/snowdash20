@@ -174,7 +174,7 @@ export class Player {
   getSpriteKey(): string {
     const dir = this.direction === 'stop' ? 'd' : this.direction[0];
     if (this.state === 'moving') {
-      const frame = (Math.floor(this.animTick / 3) % 3) + 1;
+      const frame = (Math.floor(this.animTick / 9) % 3) + 1;
       return `p_${dir}_${frame}`;
     }
     return `p_${dir}_1`;

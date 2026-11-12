@@ -237,14 +237,16 @@ describe('Game', () => {
     const game = new Game(['/1'], makeFetcher([LEVEL_WITH_CHEST]));
     await game.start();
 
-    // Stone one cell above the monster. Both start idle.
     // Tick: monster moves 3px down, stone falls 8px down, AABB overlaps.
     const monster = new Monster(8, 4, 1);
+    monster.direction = 'down';
     const stone = new Stone(8, 3);
     game.monsters.push(monster);
     game.stones.push(stone);
 
-    game.tick(null);
+    // With acceleration, stone catches the monster around tick 10
+    // (stone.y ≈ 132, monster.y ≈ 170, gap 38 < 40). 15 ticks is safe margin.
+    for (let i = 0; i < 15; i++) game.tick(null);
 
     expect(monster.killed).toBe(true);
     expect(game.score).toBe(35);
@@ -305,11 +307,12 @@ describe('Game', () => {
     game.stones.push(stone);
 
     // Player walks right for 8 ticks (from x=160 to x=200, fully out of column 4)
-    for (let i = 0; i < 8; i++) game.tick('right');
+    for (let i = 0; i < 19; i++) game.tick('right');
 
     // The column below is fully empty — stone falls all the way to row 11
-    // (right above the bottom wall). 8 cells × 5 ticks/cell + safety margin.
-    for (let i = 0; i < 60; i++) game.tick(null);
+    // With acceleration (0.222 px/tick²), 8 cells = 320 px takes ~53 ticks
+    // after the player leaves column 4 (~tick 19). 100 gives comfortable margin.
+    for (let i = 0; i < 100; i++) game.tick(null);
 
     expect(game.lives).toBe(initialLives); // survived the walk-away
     expect(stone.state).toBe('idle');

@@ -1,7 +1,7 @@
 import type { CellCoords, Direction } from '../types';
 import type { Level } from '../level/level';
 import type { Player } from './player';
-import { TILE_SIZE, STONE_FALL_SPEED, STONE_PUSH_SPEED } from '../config';
+import { TILE_SIZE, STONE_FALL_ACCEL, STONE_FALL_MAX_SPEED, STONE_PUSH_SPEED } from '../config';
 import { audio } from '../audio/audio';
 
 export type StoneState = 'idle' | 'falling' | 'pushed';
@@ -11,6 +11,7 @@ export class Stone {
   y: number;
   state: StoneState = 'idle';
   private isPursuing = false;
+  private fallVelocity = 0;
 
   private targetX: number;
   private targetY: number;
@@ -31,6 +32,7 @@ export class Stone {
     this.targetY = this.startY;
     this.state = 'idle';
     this.isPursuing = false;
+    this.fallVelocity = 0;
   }
 
   getCell(): CellCoords {
@@ -69,6 +71,7 @@ export class Stone {
     this.targetX = targetCol * TILE_SIZE;
     this.targetY = targetRow * TILE_SIZE;
     this.isPursuing = false;
+    this.fallVelocity = 0;
     audio.playSfx(32);
     return true;
   }
@@ -90,6 +93,7 @@ export class Stone {
     if (this.isPursuing && !canFallNow) {
       audio.playSfx(35); // Stone Falled
       this.isPursuing = false;
+      this.fallVelocity = 0;
     }
 
     // Fall straight down
@@ -158,7 +162,11 @@ export class Stone {
   }
 
   private moveTowardTarget(): void {
-    const speed = this.state === 'falling' ? STONE_FALL_SPEED : STONE_PUSH_SPEED;
+    if (this.state === 'falling') {
+      this.fallVelocity = Math.min(this.fallVelocity + STONE_FALL_ACCEL, STONE_FALL_MAX_SPEED);
+    }
+    const speed = this.state === 'falling' ? this.fallVelocity : STONE_PUSH_SPEED;
+
     const dx = Math.sign(this.targetX - this.x);
     const dy = Math.sign(this.targetY - this.y);
 

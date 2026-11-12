@@ -102,10 +102,10 @@ describe('Stone', () => {
     expect(s.state).toBe('falling');
   });
 
-  it('falls one cell in 5 ticks then idles', () => {
+  it('falls one cell with acceleration (~19 ticks), then idles', () => {
     const s = new Stone(3, 3);
     const level = makeLevel();
-    for (let i = 0; i < 5; i++) s.update(level, [s], null);
+    for (let i = 0; i < 19; i++) s.update(level, [s], null);
     expect(s.y).toBe(160); // arrived at row 4
     expect(s.state).toBe('idle');
   });

@@ -96,17 +96,17 @@ describe('Player', () => {
     expect(p.state).toBe('idle');
   });
 
-  it('moves 5px per tick, arrives after 8 ticks', () => {
+  it('moves ~2.13px per tick, arrives after 19 ticks', () => {
     const p = new Player(2, 2);
     const level = makeLevel();
     const game = makeGame();
 
     p.update('right', level, game as unknown as Game, [], []);
-    expect(p.x).toBe(85);
+    expect(p.x).toBeCloseTo(82.13, 1);
     expect(p.state).toBe('moving');
     expect(p.direction).toBe('right');
 
-    for (let i = 0; i < 7; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 18; i++) p.update('right', level, game as unknown as Game, [], []);
     expect(p.x).toBe(120);
     expect(p.state).toBe('idle');
   });
@@ -124,7 +124,7 @@ describe('Player', () => {
     const level = makeLevel();
     const game = makeGame();
 
-    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 19; i++) p.update('right', level, game as unknown as Game, [], []);
     expect(level.getCell(3, 2)).toBe('snow');
 
     p.update(null, level, game as unknown as Game, [], []);
@@ -137,11 +137,11 @@ describe('Player', () => {
     const game = makeGame();
 
     // Move to (3,2) and consume snow
-    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 19; i++) p.update('right', level, game as unknown as Game, [], []);
     p.update(null, level, game as unknown as Game, [], []);
 
     // Move to (4,2) and consume chest
-    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 19; i++) p.update('right', level, game as unknown as Game, [], []);
     p.update(null, level, game as unknown as Game, [], []);
 
     expect(level.getCell(4, 2)).toBe('empty');
@@ -183,7 +183,7 @@ describe('Player', () => {
     p.update('right', level, game as unknown as Game, [], []);
     expect(p.getSpriteKey()).toBe('p_r_1');
 
-    for (let i = 0; i < 2; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
     expect(p.getSpriteKey()).toBe('p_r_2');
   });
 
@@ -193,13 +193,13 @@ describe('Player', () => {
     const game = makeGame(); // visibleChests = 1 (only one chest on this level)
 
     // Walk to (3,2) — eat snow (irrelevant SFX, clear after)
-    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 19; i++) p.update('right', level, game as unknown as Game, [], []);
     p.update(null, level, game as unknown as Game, [], []);
 
     vi.clearAllMocks();
 
     // Walk to (4,2) — eat the last chest
-    for (let i = 0; i < 8; i++) p.update('right', level, game as unknown as Game, [], []);
+    for (let i = 0; i < 19; i++) p.update('right', level, game as unknown as Game, [], []);
     p.update(null, level, game as unknown as Game, [], []);
 
     expect(game.visibleChests).toBe(0);

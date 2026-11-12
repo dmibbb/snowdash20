@@ -169,9 +169,9 @@ describe('Monster', () => {
     // Private field access — TS strict; cast through `unknown` for the test only.
     expect((a as unknown as { reservedCell: unknown }).reservedCell).toEqual({ col: 6, row: 5 });
 
-    // Move exactly to the target: 40 px / 3 px per tick ≈ 13.3 → 14 ticks total.
-    // (1 already done above, so 13 more.)
-    for (let i = 0; i < 13; i++) a.update(level, [], monsters);
+    // Move exactly to the target: 40 px / 1 px per tick = 40 ticks total.
+    // (1 already done above, so 39 more.)
+    for (let i = 0; i < 39; i++) a.update(level, [], monsters);
 
     expect(a.getCell()).toEqual({ col: 6, row: 5 });
     expect(a.state).toBe('idle');
