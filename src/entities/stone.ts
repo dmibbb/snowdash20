@@ -10,7 +10,7 @@ export class Stone {
   x: number;
   y: number;
   state: StoneState = 'idle';
-  private hasFallSoundPlayed = false;
+  private isPursuing = false;
 
   private targetX: number;
   private targetY: number;
@@ -30,7 +30,7 @@ export class Stone {
     this.targetX = this.startX;
     this.targetY = this.startY;
     this.state = 'idle';
-    this.hasFallSoundPlayed = false;
+    this.isPursuing = false;
   }
 
   getCell(): CellCoords {
@@ -56,10 +56,8 @@ export class Stone {
     if (this.state !== 'idle') return false;
     if (direction !== 'left' && direction !== 'right') return false;
 
-    // Do NOT check canFall here. In the original, an actively pushed stone
-    // keeps rolling horizontally even if the cell below is empty — gravity
-    // only kicks in once the player stops pushing. This prevents the "player
-    // follows a falling stone and dies" bug.
+    // Do NOT check canFall here — pushed stones keep rolling horizontally
+    // until the player releases the key; gravity resumes afterwards.
     const cell = this.getCell();
     const dc = direction === 'left' ? -1 : 1;
     const targetCol = cell.col + dc;
@@ -70,7 +68,7 @@ export class Stone {
     this.state = 'pushed';
     this.targetX = targetCol * TILE_SIZE;
     this.targetY = targetRow * TILE_SIZE;
-    this.hasFallSoundPlayed = false;
+    this.isPursuing = false;
     audio.playSfx(32);
     return true;
   }
@@ -78,37 +76,35 @@ export class Stone {
   private tryStartFallingOrRolling(level: Level, stones: Stone[], player: Player | null): void {
     const cell = this.getCell();
     const canFallNow = this.canFall(level, stones);
+    const playerBelow = !!(player && this.playerOverlapsCell(player, cell.col, cell.row + 1));
 
-    // If the player's AABB overlaps the target cell below, do not start falling.
-    // Matches original: an idle stone treats the cell as blocked while the player
-    // occupies it (or is mid-step leaving it).
-    if (canFallNow && player && this.playerOverlapsCell(player, cell.col, cell.row + 1)) {
+    // Safety: don't start a FRESH fall if the player is directly below.
+    // Once pursuing (isPursuing), we chase and ignore this check — matching
+    // the original KillMode behavior.
+    if (canFallNow && playerBelow && !this.isPursuing) {
       return;
     }
 
-    // Detect the end of a continuous fall: we were falling, and now nothing's below.
-    if (this.hasFallSoundPlayed && !canFallNow) {
+    // End of a falling/rolling sequence. The original was silent here (bug);
+    // we play Stone Falled (35) once on the real landing.
+    if (this.isPursuing && !canFallNow) {
       audio.playSfx(35); // Stone Falled
-      this.hasFallSoundPlayed = false;
+      this.isPursuing = false;
     }
 
-    // 1. Fall straight down if the cell below is free
+    // Fall straight down
     if (canFallNow) {
-      if (!this.hasFallSoundPlayed) {
-        audio.playSfx(36); // Stone Falling
-        this.hasFallSoundPlayed = true;
-      }
+      audio.playSfx(36); // Stone Falling
       this.state = 'falling';
       this.targetX = this.x;
       this.targetY = this.y + TILE_SIZE;
+      this.isPursuing = true;
       return;
     }
 
-    // 2. Roll off ONLY if there's another stone below (matching original Stone::Move).
-    //    A stone on a wall/floor/snow stays put — no auto-rolling off edges.
+    // Roll off ONLY if there's another stone below (matching original Stone::Move).
     if (!this.hasStoneAt(stones, cell.col, cell.row + 1)) return;
-
-    // 3. Don't roll if something sits directly on top
+    //Don't roll if something sits directly on top
     if (this.hasStoneAt(stones, cell.col, cell.row - 1)) return;
 
     for (const dc of [-1, 1]) {
@@ -120,16 +116,21 @@ export class Stone {
       if (!this.isCellFree(level, stones, sideCol, sideRow)) continue;
       if (!this.isCellFree(level, stones, belowSideCol, belowSideRow)) continue;
 
-      // 4. Don't roll onto the player (AABB) or onto the cell right above them
+      // Don't roll onto the player (AABB) or onto the cell right above them
       if (player) {
         if (this.playerOverlapsCell(player, sideCol, sideRow)) continue;
-        if (this.playerOverlapsCell(player, sideCol, sideRow - 1)) continue;
+        if (this.playerOverlapsCell(player, sideCol, sideRow + 1)) continue;
       }
 
       this.state = 'pushed';
       this.targetX = sideCol * TILE_SIZE;
       this.targetY = sideRow * TILE_SIZE;
+      this.isPursuing = true;
       return;
+    }
+
+    if (this.state === 'idle') {
+      this.isPursuing = false;
     }
   }
 

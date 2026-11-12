@@ -198,4 +198,15 @@ describe('Stone', () => {
 
     expect(s.state).toBe('falling');
   });
+
+  it('keeps falling even if player is directly below (chase, not safety)', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+    const player = new Player(5, 3);
+    s.update(level, [s], player); // A stone starts failing → isPursuing = true
+    player.x = 3 * 40;
+    player.y = 5 * 40; // Player is under the stone
+    s.update(level, [s], player);
+    expect(s.state).toBe('falling');
+  });
 });
