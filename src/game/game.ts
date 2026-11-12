@@ -113,14 +113,14 @@ export class Game {
       }
     }
 
+    if (this.visibleChests === 0) {
+      this.onLevelComplete();
+    }
+
     // 250-points milestone — plays once per crossing
     while (this.score >= this.nextMilestone) {
       audio.playSfx(11); // 250 Points
       this.nextMilestone += 250;
-    }
-
-    if (this.visibleChests === 0) {
-      this.onLevelComplete();
     }
   }
 

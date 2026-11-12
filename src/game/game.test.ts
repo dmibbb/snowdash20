@@ -330,4 +330,23 @@ describe('Game', () => {
 
     expect(audio.playSfx).not.toHaveBeenCalledWith(11);
   });
+
+  it('milestone fires in the same tick as the level bonus', async () => {
+    const game = new Game(['/1', '/2'], makeFetcher([LEVEL_WITH_CHEST, LEVEL_WITH_CHEST]));
+    await game.start();
+
+    // Level has 1 chest. Player at (4,4), chest at (12,4) — we cheat by
+    // setting score and clearing the chest via level.setCell + tick.
+    game.score = 200;
+    game.level!.setCell(12, 4, 'empty');
+    game.visibleChests = 0;
+
+    game.tick(null);
+
+    // +50 bonus applied; 200 + 50 = 250 → milestone fires same tick
+    expect(game.score).toBe(250);
+    expect(game.pendingLevelComplete).toBe(true);
+    expect(audio.playSfx).toHaveBeenCalledWith(30); // Level Done
+    expect(audio.playSfx).toHaveBeenCalledWith(11); // 250 Points
+  });
 });
