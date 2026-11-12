@@ -52,7 +52,31 @@ const MASKED_SINGLES = [
 ];
 
 class AssetsManager {
-  private images = new Map<string, Sprite>();
+  private imagesPng = new Map<string, Sprite>();
+  private imagesBmp = new Map<string, Sprite>();
+  private mode: 'PNG' | 'BMP' = 'BMP'; // Start in BMP mode until migration is done
+
+  get(name: string): Sprite | undefined {
+    if (this.mode === 'PNG') {
+      return this.imagesPng.get(name); // No fallback to BMP in PNG mode — we WANT to see missing sprites
+    }
+    return this.imagesBmp.get(name) ?? this.imagesPng.get(name); // In BMP mode, fallback to PNG just in case
+  }
+
+  toggleMode(): void {
+    this.mode = this.mode === 'PNG' ? 'BMP' : 'PNG';
+    console.log(`[Assets] --- Switched to ${this.mode} mode ---`);
+
+    if (this.mode === 'PNG') {
+      const allKeys = new Set([...this.imagesBmp.keys(), ...this.imagesPng.keys()]);
+      const missingPng = [...allKeys].filter((k) => !this.imagesPng.has(k));
+      if (missingPng.length > 0) {
+        console.warn(`[Assets] Missing PNGs (${missingPng.length}):`, missingPng.join(', '));
+      } else {
+        console.log('[Assets] All sprites have PNG versions!');
+      }
+    }
+  }
 
   async loadAll(): Promise<void> {
     const tasks: Promise<void>[] = [];
@@ -60,11 +84,10 @@ class AssetsManager {
     for (const n of SINGLES) tasks.push(this.loadSingle(n));
     for (const n of MASKED_SINGLES) tasks.push(this.loadMaskedSingle(n));
     await Promise.all(tasks);
-    console.log(`[Assets] loaded ${this.images.size} sprites`);
-  }
 
-  get(name: string): Sprite | undefined {
-    return this.images.get(name);
+    const pngCount = this.imagesPng.size;
+    const bmpCount = this.imagesBmp.size;
+    console.log(`[Assets] Loaded: ${pngCount} PNG, ${bmpCount} BMP. Current mode: ${this.mode}`);
   }
 
   private async loadManifest(path: string): Promise<void> {
@@ -83,11 +106,15 @@ class AssetsManager {
       for (let i = 0; i + 1 < lines.length; i += 2) {
         const imgName = basename(lines[i]);
         const maskName = basename(lines[i + 1]);
+
+        const png = await this.tryLoadBitmap(`/sprites/${imgName}.png`);
+        if (png) this.imagesPng.set(imgName, png);
+
         try {
           const bmp = await this.loadMasked(`/sprites/${imgName}.bmp`, `/sprites/${maskName}.bmp`);
-          this.images.set(imgName, bmp);
+          this.imagesBmp.set(imgName, bmp);
         } catch (err) {
-          console.warn(`[Assets] failed: ${imgName}`, err);
+          if (!png) console.warn(`[Assets] failed to load any format for: ${imgName}`);
         }
       }
     } catch (err) {
@@ -96,21 +123,34 @@ class AssetsManager {
   }
 
   private async loadSingle(name: string): Promise<void> {
-    try {
-      const bmp = await this.loadBitmap(`/sprites/${name}.bmp`);
-      this.images.set(name, bmp);
-    } catch (err) {
-      console.warn(`[Assets] failed: ${name}`, err);
-    }
+    const png = await this.tryLoadBitmap(`/sprites/${name}.png`);
+    if (png) this.imagesPng.set(name, png);
+
+    const bmp = await this.tryLoadBitmap(`/sprites/${name}.bmp`);
+    if (bmp) this.imagesBmp.set(name, bmp);
+
+    if (!png && !bmp) console.warn(`[Assets] failed to load any format for: ${name}`);
   }
 
   private async loadMaskedSingle(name: string): Promise<void> {
+    const png = await this.tryLoadBitmap(`/sprites/${name}.png`);
+    if (png) this.imagesPng.set(name, png);
+
     try {
       const bmp = await this.loadMasked(`/sprites/${name}.bmp`, `/sprites/${name}_mask.bmp`);
-      this.images.set(name, bmp);
+      this.imagesBmp.set(name, bmp);
     } catch (err) {
-      console.warn(`[Assets] no mask for ${name}, loading as single image`);
-      await this.loadSingle(name);
+      const bmp = await this.tryLoadBitmap(`/sprites/${name}.bmp`);
+      if (bmp) this.imagesBmp.set(name, bmp);
+      if (!png && !bmp) console.warn(`[Assets] failed to load any format for: ${name}`);
+    }
+  }
+
+  private async tryLoadBitmap(path: string): Promise<Sprite | null> {
+    try {
+      return await this.loadBitmap(path);
+    } catch {
+      return null;
     }
   }
 

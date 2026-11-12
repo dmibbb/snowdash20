@@ -9,6 +9,7 @@ import {
   consumeConfirm,
   consumeClick,
   consumeNextTrack,
+  consumeToggleSprites,
   consumeRestart,
   getMousePosition,
 } from './input/input';
@@ -311,6 +312,9 @@ async function main(): Promise<void> {
     while (accumulator >= TICK_MS) {
       if (consumeMute()) {
         audio.toggleMute();
+      }
+      if (consumeToggleSprites()) {
+        assets.toggleMode();
       }
       machine.tick();
       accumulator -= TICK_MS;
