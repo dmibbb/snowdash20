@@ -5,6 +5,7 @@ import { assets } from '../assets/loader';
 import { drawGlowingText } from '../render/overlays';
 
 export interface SplashCallbacks {
+  canvas: HTMLCanvasElement;
   onStart: () => void;
 }
 
@@ -45,8 +46,8 @@ export function createSplash(callbacks: SplashCallbacks): ModeHooks {
       audio.setPaused(false);
 
       window.addEventListener('keydown', handleGesture);
-      window.addEventListener('mousedown', handleGesture);
-      window.addEventListener('touchstart', handleGesture);
+      callbacks.canvas.addEventListener('mousedown', handleGesture);
+      callbacks.canvas.addEventListener('touchstart', handleGesture);
     },
     onExit: () => {
       cleanup();

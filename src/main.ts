@@ -285,6 +285,7 @@ async function main(): Promise<void> {
   machine.register(
     'splash',
     createSplash({
+      canvas,
       onStart: () => {
         consumeAnyKey();
         consumeConfirm();
