@@ -319,6 +319,22 @@ class AudioManager {
       }
     }
   }
+
+  pauseMusic(): void {
+    if (this.currentMusicId === null) return;
+    const current = this.music.get(this.currentMusicId);
+    if (current) current.pause();
+  }
+
+  resumeMusic(): void {
+    if (this.currentMusicId === null) return;
+    const current = this.music.get(this.currentMusicId);
+    if (current && current.paused) {
+      current.play().catch((err) => {
+        console.warn('[Audio] resumeMusic rejected:', err);
+      });
+    }
+  }
 }
 
 export const audio = new AudioManager();

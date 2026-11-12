@@ -32,6 +32,7 @@ export function createHeroDeath(callbacks: HeroDeathCallbacks): ModeHooks {
     // Kill any lingering SFX (hero die 26-29 still playing) so it doesn't
     // leak into the next Playing/GameOver mode.
     audio.stopAllSfx();
+    audio.resumeMusic();
     const game = callbacks.getGame();
     game?.resolveHeroDeath();
     callbacks.onDone();
@@ -41,12 +42,12 @@ export function createHeroDeath(callbacks: HeroDeathCallbacks): ModeHooks {
     onEnter: () => {
       timer = 0;
       resolved = false;
-      // Drop stale input from the moment the player died
       consumeClick();
       consumeConfirm();
       consumePause();
       consumeAnyKey();
       consumeNextTrack();
+      audio.pauseMusic(); // Gameplay music is muted during RIP — death SFX plays alone.
     },
     tick: () => {
       if (resolved) return;
