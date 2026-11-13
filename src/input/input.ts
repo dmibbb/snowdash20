@@ -19,7 +19,6 @@ let pendingPause = false;
 let pendingMute = false;
 let pendingNextTrack = false;
 let pendingRestart = false;
-let pendingToggleSprites = false;
 let pendingAnyKey = false;
 let pendingClick: { x: number; y: number } | null = null;
 let mousePos: { x: number; y: number } | null = null;
@@ -55,8 +54,6 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
       pendingNextTrack = true;
     } else if (e.code === 'KeyR') {
       pendingRestart = true;
-    } else if (e.code === 'KeyZ') {
-      pendingToggleSprites = true;
     }
   });
 
@@ -149,11 +146,5 @@ export function consumeAnyKey(): boolean {
 export function consumeRestart(): boolean {
   const v = pendingRestart;
   pendingRestart = false;
-  return v;
-}
-
-export function consumeToggleSprites(): boolean {
-  const v = pendingToggleSprites;
-  pendingToggleSprites = false;
   return v;
 }
