@@ -5,9 +5,9 @@ import { assets } from '../assets/loader';
 import { drawButton, type ButtonRect } from './button';
 
 export const PAUSE_MENU_BUTTON: ButtonRect = {
-  x: CANVAS_WIDTH / 2 - 100,
+  x: CANVAS_WIDTH / 2 - 75,
   y: (GRID_ROWS * TILE_SIZE) / 2 + 175,
-  w: 200,
+  w: 150,
   h: 50,
 };
 
@@ -41,7 +41,19 @@ export function drawPauseOverlay(ctx: CanvasRenderingContext2D, hoveredMenuBtn: 
   ctx.fillText('Press Esc or P to resume', CANVAS_WIDTH / 2, centerY + 35);
   ctx.fillText('Press R to restart (−200 pts)', CANVAS_WIDTH / 2, centerY + 58);
 
-  drawButton(ctx, PAUSE_MENU_BUTTON, '[ Back to Main Menu ]', hoveredMenuBtn, 20);
+  const btnImg = assets.get(hoveredMenuBtn ? 'main_menu_2' : 'main_menu');
+
+  if (btnImg) {
+    ctx.drawImage(
+      btnImg,
+      PAUSE_MENU_BUTTON.x,
+      PAUSE_MENU_BUTTON.y,
+      PAUSE_MENU_BUTTON.w,
+      PAUSE_MENU_BUTTON.h,
+    );
+  } else {
+    drawButton(ctx, PAUSE_MENU_BUTTON, '[ Back to Main Menu ]', hoveredMenuBtn, 20);
+  }
 }
 
 function drawModalFrame(ctx: CanvasRenderingContext2D): void {
