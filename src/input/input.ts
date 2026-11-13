@@ -26,6 +26,7 @@ let mousePos: { x: number; y: number } | null = null;
 let canvasEl: HTMLCanvasElement | null = null;
 let logicalW = 800;
 let logicalH = 560;
+let touchDirection: Direction | null = null;
 
 export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH): void {
   canvasEl = canvas;
@@ -68,7 +69,7 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
     pressed.clear();
   });
 
-  canvas.addEventListener('mousedown', (e) => {
+  canvas.addEventListener('pointerdown', (e) => {
     if (!canvasEl) return;
     const rect = canvasEl.getBoundingClientRect();
     const scaleX = logicalW / rect.width;
@@ -79,7 +80,7 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
     };
   });
 
-  canvas.addEventListener('mousemove', (e) => {
+  canvas.addEventListener('pointermove', (e) => {
     if (!canvasEl) return;
     const rect = canvasEl.getBoundingClientRect();
     const scaleX = logicalW / rect.width;
@@ -90,12 +91,33 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
     };
   });
 
-  canvas.addEventListener('mouseleave', () => {
+  canvas.addEventListener('pointerleave', () => {
     mousePos = null;
+  });
+
+  const dpadButtons = document.querySelectorAll('.dpad-btn');
+  dpadButtons.forEach((btn) => {
+    const dir = btn.getAttribute('data-dir') as Direction;
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      touchDirection = dir;
+    });
+
+    const clearDir = (e: Event) => {
+      e.preventDefault();
+      if (touchDirection === dir) touchDirection = null;
+    };
+    btn.addEventListener('pointerup', clearDir);
+    btn.addEventListener('pointerleave', clearDir);
+    btn.addEventListener('pointercancel', clearDir);
   });
 }
 
 export function getDirection(): Direction | null {
+  // D-pad has priority
+  if (touchDirection) return touchDirection;
+
   if (pressed.has('ArrowUp') || pressed.has('KeyW')) return 'up';
   if (pressed.has('ArrowDown') || pressed.has('KeyS')) return 'down';
   if (pressed.has('ArrowLeft') || pressed.has('KeyA')) return 'left';

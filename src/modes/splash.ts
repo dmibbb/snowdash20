@@ -15,8 +15,7 @@ export function createSplash(callbacks: SplashCallbacks): ModeHooks {
 
   function cleanup(): void {
     window.removeEventListener('keydown', handleGesture);
-    window.removeEventListener('mousedown', handleGesture);
-    window.removeEventListener('touchstart', handleGesture);
+    callbacks.canvas.removeEventListener('pointerdown', handleGesture);
   }
 
   function handleGesture(): void {
@@ -46,8 +45,7 @@ export function createSplash(callbacks: SplashCallbacks): ModeHooks {
       audio.setPaused(false);
 
       window.addEventListener('keydown', handleGesture);
-      callbacks.canvas.addEventListener('mousedown', handleGesture);
-      callbacks.canvas.addEventListener('touchstart', handleGesture);
+      callbacks.canvas.addEventListener('pointerdown', handleGesture);
     },
     onExit: () => {
       cleanup();

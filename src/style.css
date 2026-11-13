@@ -420,3 +420,77 @@ canvas#game {
   border-color: #00ddff;
   text-shadow: 0 0 6px rgba(0, 221, 255, 0.5);
 }
+
+/* --- Mobile & Touch Controls --- */
+
+.touch-controls {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  /* Hide side panels */
+  .side-panel {
+    display: none;
+  }
+
+  /* Make container and canvas responsive */
+  .game-body {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  canvas#game {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Position D-Pad directly on top of the canvas */
+  .touch-controls {
+    display: grid;
+    grid-template-columns: 45px 45px 45px;
+    grid-template-rows: 45px 45px 45px;
+    gap: 6px;
+    
+    position: absolute;
+    bottom: 50px; /* Keep it just above the HUD (which is 40px tall) */
+    left: 15px;   /* Align to the left side. You can change to right: 15px */
+    z-index: 100; /* Ensure it stays above the canvas */
+    
+    opacity: 0.6; /* Semi-transparent so it doesn't block the game view */
+    transition: opacity 0.2s ease;
+  }
+
+  /* Make it fully visible on touch */
+  .touch-controls:active,
+  .touch-controls:hover {
+    opacity: 1;
+  }
+
+  .dpad-btn {
+    background: rgba(26, 26, 26, 0.8);
+    border: 2px solid rgba(74, 142, 216, 0.7);
+    color: #00ddff;
+    font-size: 18px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    box-shadow: 0 0 6px rgba(0, 221, 255, 0.2);
+  }
+
+  .dpad-btn:active {
+    background: rgba(74, 142, 216, 0.6);
+    border-color: #00ddff;
+    transform: scale(0.95);
+  }
+
+  /* Grid placement */
+  .dpad-btn.up    { grid-column: 2; grid-row: 1; }
+  .dpad-btn.left  { grid-column: 1; grid-row: 2; }
+  .dpad-btn.right { grid-column: 3; grid-row: 2; }
+  .dpad-btn.down  { grid-column: 2; grid-row: 3; }
+}

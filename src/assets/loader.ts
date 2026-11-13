@@ -24,10 +24,6 @@ const SINGLES = [
   '7',
   '8',
   '9',
-  'snowball',
-  'pause',
-  'gameover',
-  'hero_die',
   // Menu (default + hover)
   'back_menu',
   'main_menu',
