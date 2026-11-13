@@ -60,18 +60,19 @@
       </summary>
 
       <div class="about-port-body">
+        <div class="about-port-date">Released: November 13, 2026</div>
+
         <h3>Hi there!</h3>
 
         <p class="about-port-lead">
           <b>Димасик</b> (<span class="rgb-b">B</span> from <span class="rgb-r">R</span><span class="rgb-g">G</span><span class="rgb-b">B</span> <span class="rgb-team">Team</span>
           ) here 👋</br></br>Before you is a special web edition of the super-duper mega-cool 
-          game <b>SnowDash</b>. It was made by third- and then fifth-year students — 
-          <span class="rgb-r">R</span><span class="rgb-g">G</span><span class="rgb-b">B</span> <span class="rgb-team">Team</span>
-           — back in 2006/2008. Since the game became a bit of a meme in narrow circles (and 
-           a certain club of those who passed the compiler coursework, IYKYK), and the 20th 
-           anniversary is right around the corner, I decided to make a web port. With a lot 
-           of help from DeepSeek and a bit of Qwen, the Win32 C++ application was ported to 
-           the web (TS) in just a few evenings.
+          game <b>SnowDash</b>. It was made by third- and then fifth-year students back in 
+          2006/2008. Since the game became a bit of a meme in narrow circles (and a certain 
+          club of those who passed the compiler coursework, IYKYK), and the 20th anniversary 
+          is right around the corner, I decided to make a web port. With a lot of help from 
+          DeepSeek and a bit of Qwen, the Win32 C++ application was ported to the web (TS) in
+           just a few evenings.
         </p>
 
         <h3>A bit of history</h3>
@@ -142,15 +143,20 @@
           twenty :D. Why not make a proper web edition?
         </p>
 
-        <figure class="about-port-figure">
-          <img src="/images/2026.png" alt="SnowDash: 20th Anniversary Edition. Feel the real difference!" loading="lazy">
-          <figcaption>SnowDash: 20th Anniversary Edition. Feel the real difference!</figcaption>
-        </figure>
-
         <p>Luckily, I kept all my university stuff and even found the original uncompressed assets 
-          (except music and SFX, alas).</p>
+          (except music and SFX, alas). Moved all BMPs to PNGs (I saved 5 MB of your traffic, bro!) 
+          and for some assets I had to resurrect Ulead Cool 3D.</p>
 
         <h3>What's different in the web version</h3>
+
+        <div class="slider-container">
+          <div class="slider-img slider-bg" style="background-image: url('/images/comp_26.png');"></div>
+          <div class="slider-img slider-fg" id="slider-fg" style="background-image: url('/images/comp_06.png');"></div>
+          <input type="range" min="0" max="100" value="50" class="slider-input" id="slider-input">
+          <div class="slider-line" id="slider-line"></div>
+        </div>
+        <div class="slider-caption">SnowDash: 20th Anniversary Edition. Feel the real difference: 2006 (left) vs 2026 (right)</div>
+
         <ul>
           <li>
             <b>Splash screen.</b> Browsers won't start audio without a user gesture, so
