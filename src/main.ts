@@ -1,4 +1,5 @@
 import './style.css';
+import { initSiteUI } from './ui';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
 import {
   initInput,
@@ -76,6 +77,8 @@ async function loadLevelFile(path: string): Promise<string> {
 
 async function main(): Promise<void> {
   drawSplashLoading();
+
+  initSiteUI();
 
   try {
     await Promise.all([assets.loadAll(), audio.preload()]);
@@ -326,16 +329,3 @@ async function main(): Promise<void> {
 main().catch((e) => {
   console.error('Failed to start:', e);
 });
-
-// Image Comparison Slider logic
-const sliderInput = document.getElementById('slider-input') as HTMLInputElement;
-const sliderFg = document.getElementById('slider-fg');
-const sliderLine = document.getElementById('slider-line');
-
-if (sliderInput && sliderFg && sliderLine) {
-  sliderInput.addEventListener('input', (e) => {
-    const val = (e.target as HTMLInputElement).value;
-    sliderFg.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
-    sliderLine.style.left = `${val}%`;
-  });
-}
