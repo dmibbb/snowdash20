@@ -13,7 +13,7 @@ interface IntroElement {
 }
 
 const ELEMENTS_DEF: IntroElement[] = [
-  { key: 'R', startX: -480, startY: 65, targetX: 200, targetY: 65, speed: 4 / 3 },
+  { key: 'R', startX: -480, startY: 65, targetX: 175, targetY: 65, speed: 4 / 3 },
   { key: 'G', startX: 323, startY: -400, targetX: 323, targetY: 65, speed: 3 / 3 },
   { key: 'B', startX: 1100, startY: 65, targetX: 480, targetY: 65, speed: 4 / 3 },
   { key: 'team', startX: 275, startY: 980, targetX: 275, targetY: 430, speed: 3 / 3 },
