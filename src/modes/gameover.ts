@@ -6,14 +6,15 @@ import { render as renderGame } from '../render/renderer';
 import { drawButton, isPointInRect, type ButtonRect } from '../render/button';
 import { getMousePosition, consumeClick, consumeConfirm, consumePause } from '../input/input';
 import { audio } from '../audio/audio';
+import { assets } from '../assets/loader';
 
 const FIELD_HEIGHT = GRID_ROWS * TILE_SIZE;
 
 const BACK_BUTTON: ButtonRect = {
-  x: CANVAS_WIDTH / 2 - 130,
+  x: CANVAS_WIDTH / 2 - 75,
   y: FIELD_HEIGHT / 2 + 110,
-  w: 260,
-  h: 56,
+  w: 150,
+  h: 50,
 };
 
 export interface GameOverCallbacks {
@@ -69,7 +70,12 @@ export function createGameOver(callbacks: GameOverCallbacks): ModeHooks {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.fillRect(0, FIELD_HEIGHT, CANVAS_WIDTH, HUD_HEIGHT);
 
-      drawButton(ctx, BACK_BUTTON, '[ Back to Main Menu ]', hovered, 20);
+      const btnImg = assets.get(hovered ? 'main_menu_2' : 'main_menu');
+      if (btnImg) {
+        ctx.drawImage(btnImg, BACK_BUTTON.x, BACK_BUTTON.y, BACK_BUTTON.w, BACK_BUTTON.h);
+      } else {
+        drawButton(ctx, BACK_BUTTON, '[ Back to Main Menu ]', hovered, 20);
+      }
     },
   };
 }
