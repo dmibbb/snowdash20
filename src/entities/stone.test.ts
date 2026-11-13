@@ -209,4 +209,38 @@ describe('Stone', () => {
     s.update(level, [s], player);
     expect(s.state).toBe('falling');
   });
+
+  it('getCell returns correct cell during fall at midpoint', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+
+    // Start falling
+    s.update(level, [s], null);
+    expect(s.state).toBe('falling');
+
+    // Simulate falling to midpoint
+    s.y = 140; // midpoint between 120 and 160
+
+    // Stone is physically in row 3 (y=120..159), not row 4
+    expect(s.getCell()).toEqual({ col: 3, row: 3 });
+
+    // Even at exact midpoint y=140
+    s.y = 140;
+    expect(s.getCell()).toEqual({ col: 3, row: 3 });
+  });
+
+  it('getCell handles exact midpoint during push', () => {
+    const s = new Stone(3, 3);
+    const level = makeLevel();
+
+    // Push right
+    s.tryPush('right', level, [s]);
+    expect(s.state).toBe('pushed');
+
+    // Midpoint of push
+    s.x = 140; // midpoint between 120 and 160
+
+    // Stone is physically in col 3 (x=120..159), not col 4
+    expect(s.getCell()).toEqual({ col: 3, row: 3 });
+  });
 });

@@ -231,4 +231,40 @@ describe('Player', () => {
     expect(p.state).toBe('moving'); // started walking into (5,4)
     expect(stone.state).toBe('pushed'); // and pushed the stone toward (6,4)
   });
+
+  it('getCell returns correct cell at midpoint of movement', () => {
+    const p = new Player(2, 2);
+    const level = makeLevel();
+    const game = makeGame();
+
+    // Start moving right
+    p.update('right', level, game as unknown as Game, [], []);
+
+    // After 9 ticks, player should be at x ≈ 101 (midpoint between 80 and 120)
+    for (let i = 0; i < 9; i++) p.update('right', level, game as unknown as Game, [], []);
+
+    // Player is physically in cell 2 (x=80..119), not cell 3
+    expect(p.getCell()).toEqual({ col: 2, row: 2 });
+
+    // Even if x is exactly 100 (midpoint), should still be cell 2
+    p.x = 100;
+    expect(p.getCell()).toEqual({ col: 2, row: 2 });
+  });
+
+  it('getCell handles exact midpoint coordinates', () => {
+    const p = new Player(0, 0);
+
+    // Test all midpoints
+    p.x = 20;
+    p.y = 20;
+    expect(p.getCell()).toEqual({ col: 0, row: 0 });
+
+    p.x = 60;
+    p.y = 60;
+    expect(p.getCell()).toEqual({ col: 1, row: 1 });
+
+    p.x = 100;
+    p.y = 100;
+    expect(p.getCell()).toEqual({ col: 2, row: 2 });
+  });
 });

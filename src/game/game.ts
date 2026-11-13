@@ -180,6 +180,7 @@ export class Game {
   }
 
   private overlaps(a: { x: number; y: number }, b: { x: number; y: number }): boolean {
-    return Math.abs(a.x - b.x) < TILE_SIZE && Math.abs(a.y - b.y) < TILE_SIZE;
+    const EPSILON = 0.001;
+    return Math.abs(a.x - b.x) < TILE_SIZE - EPSILON && Math.abs(a.y - b.y) < TILE_SIZE - EPSILON;
   }
 }

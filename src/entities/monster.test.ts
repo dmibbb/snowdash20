@@ -191,4 +191,33 @@ describe('Monster', () => {
     expect(spikerDirs.has('up')).toBe(false);
     expect(spikerDirs.has('down')).toBe(false);
   });
+
+  it('getCell returns correct cell at midpoint of movement', () => {
+    const m = new Monster(5, 5, 1);
+    const level = makeLevel();
+
+    // Start moving down
+    m.direction = 'down';
+    m.update(level, [], [m]);
+    expect(m.state).toBe('moving');
+
+    // Simulate midpoint
+    m.y = 220; // midpoint between 200 and 240
+
+    // Monster is physically in row 5 (y=200..239), not row 6
+    expect(m.getCell()).toEqual({ col: 5, row: 5 });
+  });
+
+  it('getCell handles exact midpoint coordinates', () => {
+    const m = new Monster(0, 0, 1);
+
+    // Test all midpoints
+    m.x = 20;
+    m.y = 20;
+    expect(m.getCell()).toEqual({ col: 0, row: 0 });
+
+    m.x = 60;
+    m.y = 60;
+    expect(m.getCell()).toEqual({ col: 1, row: 1 });
+  });
 });

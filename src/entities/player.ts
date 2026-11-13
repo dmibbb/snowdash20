@@ -39,8 +39,8 @@ export class Player {
 
   getCell(): CellCoords {
     return {
-      col: Math.round(this.x / TILE_SIZE),
-      row: Math.round(this.y / TILE_SIZE),
+      col: Math.floor(this.x / TILE_SIZE),
+      row: Math.floor(this.y / TILE_SIZE),
     };
   }
 

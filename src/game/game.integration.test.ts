@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Monster } from '../entities/monster';
+import { Stone } from '../entities/stone';
 
 vi.mock('../audio/audio', () => ({
   audio: {
@@ -144,5 +145,52 @@ describe('Game integration', () => {
     expect(game.lives).toBe(initialLives - 1);
     expect(game.pendingHeroDeath).toBe(true);
     expect(game.player!.getCell()).toEqual({ col: 4, row: 4 }); // didn't move
+  });
+
+  it('no false collision when pushing stone at midpoint', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_TWO]));
+    await game.start();
+
+    // Position player and stone for push
+    game.player!.x = 4 * 40;
+    game.player!.y = 4 * 40;
+    const stone = new Stone(5, 4);
+    game.stones.push(stone);
+
+    // Start pushing
+    game.tick('right');
+    expect(stone.state).toBe('pushed');
+
+    // Simulate midpoint of push
+    game.player!.x = 4 * 40 + 20; // midpoint
+    stone.x = 5 * 40 + 20; // midpoint
+
+    // Should NOT trigger collision
+    const livesBefore = game.lives;
+    game.tick('right');
+    expect(game.lives).toBe(livesBefore);
+  });
+
+  it('no false collision when stone falls at midpoint', async () => {
+    const game = new Game(['/1'], makeFetcher([LEVEL_TWO]));
+    await game.start();
+
+    // Position player below stone
+    game.player!.x = 4 * 40;
+    game.player!.y = 5 * 40;
+    const stone = new Stone(4, 3);
+    game.stones.push(stone);
+
+    // Start falling
+    game.tick(null);
+    expect(stone.state).toBe('falling');
+
+    // Simulate midpoint of fall
+    stone.y = 3 * 40 + 20; // midpoint
+
+    // Should NOT trigger collision (player is in row 5, stone is in row 3-4)
+    const livesBefore = game.lives;
+    game.tick(null);
+    expect(game.lives).toBe(livesBefore);
   });
 });
