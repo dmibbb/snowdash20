@@ -4,11 +4,12 @@
 
 **A browser port of a 2006 university Win32 C++ arcade game, rebuilt in TypeScript.**
 
-[![Play Online](https://img.shields.io/badge/netlify-play-green?logo=netlify)](https://snowdash20.netlify.app)
+[![Play Online](https://img.shields.io/badge/Netlify-Play-green?logo=netlify)](https://snowdash20.netlify.app)
+
 ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![HTML5 Canvas](https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white)
 
-**[English](README.md)** | **[Русский](README.ru.md)** | **[Ретро](misc/RETRO.md)**
+**[English](README.md)** | **[Русский](README.ru.md)** | **[Post-mortem на русском](misc/RETRO.md)**
 
 </div>
 
@@ -24,7 +25,7 @@ Before you is a special web edition of the super-duper mega-cool game **SnowDash
 
 ### 2006
 
-A university "Computer Graphics" course. The assignment: make a computer game, or something like it. So the three of us teamed up and formed <img src="public/images/rgb_team.png" alt="RGB team" width="30">, named after our initials. And so we got to work!
+A university "Computer Graphics" course. The assignment: make a computer game, or something like it. So the three of us teamed up and formed <img src="public/images/rgb_team.png" alt="RGB team" width="40">, named after our initials. And so we got to work!
 
 <div align="center">
   <img src="public/images/2006.png" alt="SnowDash 2006 ♥" width="800">
@@ -34,7 +35,7 @@ A university "Computer Graphics" course. The assignment: make a computer game, o
 
 Young past-me was responsible for a few things (feel free to smack past-me on the head for any of them):
 
-- **"Wrote" "the music".** AAll the cacophony you hear in the background is on me. Thanks to Hip-Hop eJay (great DAW, btw)! Unfortunately, I couldn't find the original files, so enjoy the 128 kbps MP3s. \*Sad trombone noises...\*
+- **"Wrote" "the music".** All the cacophony you hear in the background is on me. Thanks to Hip-Hop eJay (great DAW, btw)! Unfortunately, I couldn't find the original files, so enjoy the 128 kbps MP3s. \*Sad trombone noises...\*
 - **Hooked up FMOD and handled all the sound.** All SFX were carefully cut and mixed in Sound Forge (another great tool, btw), if I remember correctly.
 - **All the visuals, too.** Every janky picture and animation was hand-drawn. I don't remember what I used — probably Paint.NET, or something equally simple. What I do remember: the "borrowed" Jokerman font and Ulead COOL 3D. BTW, I hope you "enjoyed" the Help text 😂 I left the image unchanged on purpose (\*cringe\*)
 
@@ -63,7 +64,7 @@ Well, it's the AI era — why not practice writing a web application in TypeScri
 
 Luckily, I kept all my university stuff and even found the original uncompressed assets (except music and SFX, alas). Converted all BMPs to PNGs (saved you 5 MB of bandwidth, bro!) and for some assets I had to resurrect Ulead COOL 3D.
 
-## ✨ What's Different in the Web Version?
+## ✨ What's Different in the Web Version
 
 <div align="center">
   <img src="public/images/comp_26.png" alt="SnowDash: 20th Anniversary Edition. Feel the real UI difference" width="800">
@@ -95,7 +96,7 @@ Sincerely,
 
 Oh no! Santa lost all his presents! Help him, **Mr. Snejok**!
 
-- **To win**: Collect every present in the level.
+- **To win**: Collect every present on the level.
 - **To help you**: Eat snow to clear your path. Push boulders off ledges to crush monsters.
 - **Watch out**: Any monster kills you on touch. So does a falling boulder.
 - **Lives**: You start with 4. Each death resets the level (presents return). Lose them all, and it's Game Over.
@@ -106,7 +107,7 @@ Oh no! Santa lost all his presents! Help him, **Mr. Snejok**!
 | :-------------------- | :-------------------------------------- |
 | `W A S D` / `⬆ ⬅ ⬇ ➡` | Navigation                              |
 | `P` / `Esc`           | Pause (in-game)                         |
-| `R`                   | Restart level (`-200 pts`)              |
+| `R`                   | Restart level (-200 pts)                |
 | `M`                   | Mute / Unmute sound & music             |
 | `N`                   | Switch background music track (in-game) |
 
@@ -129,5 +130,7 @@ npm run dev
 ```
 
 <div align="center">
+
 Made with ♥ by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026
+
 </div>
