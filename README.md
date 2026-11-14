@@ -16,7 +16,7 @@
 
 ## 🙋‍♂️ Hi there!
 
-**Димасик** ("B" from <img src="public/images/rgb_team.png" alt="RGB team" width="30">) here 👋
+**Димасик** ("B" from <img src="public/images/rgb_team.png" alt="RGB team" width="40">) here 👋
 
 Before you is a special web edition of the super-duper mega-cool game **SnowDash**. It was made by third-year students back in 2006. Since the game became a bit of a meme in narrow circles (and among a certain club of those who passed the compiler coursework, IYKYK), and the 20th anniversary is right around the corner, I decided to make a web port. With a lot of help from DeepSeek and a bit of Qwen, the Win32 C++ application was ported to the web (TS) semi-manually in just a few evenings (I'm too poor to afford Claude 😢).
 
@@ -89,9 +89,30 @@ Thanks for playing (if anyone in their right mind actually plays this — amen).
 Sincerely,  
 **Димасик**
 
-## 🛠️ MISC
+## 🎮 Game
 
-### Technical Details
+### Objectives
+
+Oh no! Santa lost all his presents! Help him, **Mr. Snejok**!
+
+- **To win**: Collect every present in the level.
+- **To help you**: Eat snow to clear your path. Push boulders off ledges to crush monsters.
+- **Watch out**: Any monster kills you on touch. So does a falling boulder.
+- **Lives**: You start with 4. Each death resets the level (presents return). Lose them all, and it's Game Over.
+
+### Controls
+
+| Key                   | Action                                  |
+| :-------------------- | :-------------------------------------- |
+| `W A S D` / `⬆ ⬅ ⬇ ➡` | Navigation                              |
+| `P` / `Esc`           | Pause (in-game)                         |
+| `R`                   | Restart level (`-200 pts`)              |
+| `M`                   | Mute / Unmute sound & music             |
+| `N`                   | Switch background music track (in-game) |
+
+## 🛠️ Technical Details
+
+### Stack
 
 - TypeScript, no frameworks
 - Canvas 2D API
@@ -106,3 +127,7 @@ cd snowdash20
 npm install
 npm run dev
 ```
+
+<div align="center">
+Made with ♥ by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026
+</div>
