@@ -1,13 +1,12 @@
 <div align="center">
 
-# ❄️ СнежныйРывок: 20-е Юбилейное издание
+# ❄️ СнежныйРывок: 20-е Юбилейное Издание
 
 **Web-порт (TypeScript) аркадной игры 2006 года, написанной на Win32 C++ в университете.**
 
 [![Играть online без регистрации и SMS](https://img.shields.io/badge/Netlify-Play-green?logo=netlify)](https://snowdash20.netlify.app)
 
-![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
-![HTML5 Canvas](https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white)
+<img src="https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white"/>
 
 **[English](README.md)** | **[Русский](README.ru.md)** | **[Post-mortem на русском](misc/RETRO.md)**
 
@@ -28,7 +27,7 @@
 Курс КГ от АМ. Задача: сделать игру или типа того. Собрались с пацанчиками и сделали <img src="public/images/rgb_team.png" alt="RGB team" width="40">, названную по нашим английским инициалам. И всё заверте...
 
 <div align="center">
-  <img src="public/images/2006.png" alt="SnowDash 2006 ♥" width="800">
+  <img src="public/images/2006.png" alt="SnowDash 2006 ♥" width="400">
   <br>
   <em>СнежныйРывок 2006 ♥</em>
 </div>
@@ -40,7 +39,7 @@
 - **И за весь визуал тоже.** Каждая всратая картинка и "анимация" была отрисована вручную. Я не помню, в чем именно рисовал — скорее всего, в Paint.NET или чем-то столь же простом. Но точно помню, что использовался шрифт Jokerman и крутая программа Ulead COOL 3D. Надеюсь, "кайфанули" от текста на экране Help 😂 Специально картинку оставил (\*кринге\*)
 
 <div align="center">
-  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D">
+  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
   <br>
   <em>Никакого ИИ! Пруфы :D</em>
 </div>
@@ -53,7 +52,7 @@
 На других курсах нам разрешили переиспользовать Снежка. Одним из них был курс "Перспективное ПО" (а у нас тут, между прочим, очень "перспективный" СнежныйРывок). Игру немного отполировали: обновили до последней версии C++, добавили скип на интро, и так по мелочам.
 
 <div align="center">
-  <img src="public/images/2008.png" alt="SnowDash 2008. Feel the difference!" width="800">
+  <img src="public/images/2008.png" alt="SnowDash 2008. Feel the difference!" width="400">
   <br>
   <em>СнежныйРывок 2008. Почувствуй разницу!</em>
 </div>
@@ -67,7 +66,7 @@
 ## ✨ Что изменилось в веб-версии
 
 <div align="center">
-  <img src="public/images/comp_26.png" alt="SnowDash: 20th Anniversary Edition. Feel the real UI difference" width="800">
+  <img src="public/images/comp_26.png" alt="SnowDash: 20th Anniversary Edition. Feel the real UI difference" width="400">
   <br>
   <em>СнежныйРывок: 20-е Юбилейное издание. Почувствуй реальную разницу в УЕ</em>
 </div>
@@ -130,8 +129,4 @@ npm install
 npm run dev
 ```
 
-<div align="center">
-
-Сделал с ♥ <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Dim♂ass♂ik</a> в 2026
-
-</div>
+<div align="center">Сделал с ♥ <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Dim♂ass♂ik</a> в 2026</div>

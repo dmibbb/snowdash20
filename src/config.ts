@@ -1,5 +1,6 @@
 export const DEBUG_TILE_LABELS = false;
 export const DEBUG_TILE_BORDERS = false;
+export const DEBUG_HIDE_SPRITES = false;
 
 export const CANVAS_WIDTH = 800;
 export const CANVAS_HEIGHT = 560;

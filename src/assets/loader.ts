@@ -1,3 +1,5 @@
+import { DEBUG_HIDE_SPRITES } from '../config';
+
 export type Sprite = ImageBitmap;
 
 const SINGLES = [
@@ -76,6 +78,8 @@ class AssetsManager {
   private imagesPng = new Map<string, Sprite>();
 
   get(name: string): Sprite | undefined {
+    if (DEBUG_HIDE_SPRITES) return undefined;
+
     return this.imagesPng.get(name);
   }
 

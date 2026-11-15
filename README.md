@@ -6,8 +6,7 @@
 
 [![Play Online](https://img.shields.io/badge/Netlify-Play-green?logo=netlify)](https://snowdash20.netlify.app)
 
-![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
-![HTML5 Canvas](https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white)
+<img src="https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white"/>
 
 **[English](README.md)** | **[Русский](README.ru.md)** | **[Post-mortem на русском](misc/RETRO.md)**
 
@@ -28,7 +27,7 @@ Before you is a special web edition of the super-duper mega-cool game **SnowDash
 A university "Computer Graphics" course. The assignment: make a computer game, or something like it. So the three of us teamed up and formed <img src="public/images/rgb_team.png" alt="RGB team" width="40">, named after our initials. And so we got to work!
 
 <div align="center">
-  <img src="public/images/2006.png" alt="SnowDash 2006 ♥" width="800">
+  <img src="public/images/2006.png" alt="SnowDash 2006 ♥" width="400">
   <br>
   <em>SnowDash 2006 ♥</em>
 </div>
@@ -40,7 +39,7 @@ Young past-me was responsible for a few things (feel free to smack past-me on th
 - **All the visuals, too.** Every janky picture and animation was hand-drawn. I don't remember what I used — probably Paint.NET, or something equally simple. What I do remember: the "borrowed" Jokerman font and Ulead COOL 3D. BTW, I hope you "enjoyed" the Help text 😂 I left the image unchanged on purpose (\*cringe\*)
 
 <div align="center">
-  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D">
+  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
   <br>
   <em>Hand-drawn, no AI! Proofs :D</em>
 </div>
@@ -53,7 +52,7 @@ Young past-me was responsible for a few things (feel free to smack past-me on th
 We were allowed to reuse the project and submit it again for another course. It was a "Promising Software" course (we have a very "promising" SnowDash here). The game got a bit of polish: upgraded to a newer C++ standard, added a skippable intro, and threw in various small fixes based on the feedback from '06.
 
 <div align="center">
-  <img src="public/images/2008.png" alt="SnowDash 2008. Feel the difference!" width="800">
+  <img src="public/images/2008.png" alt="SnowDash 2008. Feel the difference!" width="400">
   <br>
   <em>SnowDash 2008. Feel the difference!</em>
 </div>
@@ -67,7 +66,7 @@ Luckily, I kept all my university stuff and even found the original uncompressed
 ## ✨ What's Different in the Web Version
 
 <div align="center">
-  <img src="public/images/comp_26.png" alt="SnowDash: 20th Anniversary Edition. Feel the real UI difference" width="800">
+  <img src="public/images/comp_26.png" alt="SnowDash: 20th Anniversary Edition. Feel the real UI difference" width="400">
   <br>
   <em>SnowDash: 20th Anniversary Edition. Feel the real UI difference</em>
 </div>
@@ -129,8 +128,4 @@ npm install
 npm run dev
 ```
 
-<div align="center">
-
-Made with ♥ by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026
-
-</div>
+<div align="center">Made with ♥ by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026</div>
