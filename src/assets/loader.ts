@@ -90,7 +90,8 @@ class AssetsManager {
   }
 
   private async loadSingle(name: string): Promise<void> {
-    const png = await this.tryLoadBitmap(`/sprites/${name}.png`);
+    const base = import.meta.env.BASE_URL;
+    const png = await this.tryLoadBitmap(`${base}sprites/${name}.png`);
     if (png) {
       this.imagesPng.set(name, png);
     } else {

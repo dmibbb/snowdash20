@@ -90,12 +90,13 @@ async function main(): Promise<void> {
 
   let levelPaths: string[];
   try {
-    const listText = await loadLevelFile('/levels/level_list.txt');
+    const base = import.meta.env.BASE_URL;
+    const listText = await loadLevelFile(`${base}levels/level_list.txt`);
     levelPaths = listText
       .split('\n')
       .map((l) => l.trim())
       .filter(Boolean)
-      .map((p) => `/${p}`);
+      .map((p) => `${base}${p}`);
   } catch (err) {
     console.error('[Splash] Level list load failed:', err);
     drawSplashError('Failed to load levels. Check console.');

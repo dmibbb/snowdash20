@@ -45,14 +45,15 @@ class AudioManager {
   }
 
   async preload(): Promise<void> {
+    const base = import.meta.env.BASE_URL;
     const tasks: Promise<void>[] = [];
 
     for (const id of MUSIC_IDS) {
-      const src = `/sounds/music/${String(id).padStart(2, '0')}.mp3`;
+      const src = `${base}sounds/music/${String(id).padStart(2, '0')}.mp3`;
       tasks.push(this.loadAudio(src, this.music, id));
     }
     for (const id of SFX_IDS) {
-      const src = `/sounds/sfx/${id}.mp3`;
+      const src = `${base}sounds/sfx/${id}.mp3`;
       tasks.push(this.loadAudio(src, this.sfx, id));
     }
 
