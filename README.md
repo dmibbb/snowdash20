@@ -5,6 +5,7 @@
 **A browser port of a 2006 university Win32 C++ arcade game, rebuilt in TypeScript.**
 
 [![Play Online](https://img.shields.io/badge/Netlify-Play-green?logo=netlify)](https://snowdash20.netlify.app)
+[![Play Online](https://img.shields.io/badge/GitHub-Play-green?logo=github)](https://dmibbb.github.io/snowdash20/)
 
 <img src="https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white"/>
 

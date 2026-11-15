@@ -5,6 +5,7 @@
 **Web-порт (TypeScript) аркадной игры 2006 года, написанной на Win32 C++ в университете.**
 
 [![Играть online без регистрации и SMS](https://img.shields.io/badge/Netlify-Play-green?logo=netlify)](https://snowdash20.netlify.app)
+[![Играть online без регистрации и SMS](https://img.shields.io/badge/GitHub-Play-green?logo=github)](https://dmibbb.github.io/snowdash20/)
 
 <img src="https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/-HTML5_Canvas-E34F26?logo=html5&logoColor=white"/>
 
