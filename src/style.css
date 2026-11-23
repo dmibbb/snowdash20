@@ -189,6 +189,8 @@ canvas#game {
 }
 
 .about-port > summary {
+  display: flex;
+  align-items: center;
   list-style: none;
   cursor: pointer;
   padding: 14px 20px;
@@ -200,6 +202,18 @@ canvas#game {
   text-shadow: 0 0 6px rgba(74, 142, 216, 0.5);
   user-select: none;
   transition: background 0.15s ease;
+}
+
+.about-port-badge {
+  margin-left: auto;
+  padding: 3px 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #00ddff;
+  border: 1px solid rgba(0, 221, 255, 0.4);
+  border-radius: 4px;
+  background: rgba(0, 221, 255, 0.08);
+  text-shadow: 0 0 4px rgba(0, 221, 255, 0.4);
 }
 
 .about-port > summary::-webkit-details-marker { display: none; }
