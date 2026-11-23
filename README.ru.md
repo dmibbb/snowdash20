@@ -40,9 +40,11 @@
 - **И за весь визуал тоже.** Каждая всратая картинка и "анимация" была отрисована вручную. Я не помню, в чем именно рисовал — скорее всего, в Paint.NET или чем-то столь же простом. Но точно помню, что использовался шрифт Jokerman и крутая программа Ulead COOL 3D. Надеюсь, "кайфанули" от текста на экране Help 😂 Специально картинку оставил (\*кринге\*)
 
 <div align="center">
-  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
-  <br>
-  <em>Никакого ИИ! Пруфы :D</em>
+  <details>
+    <summary>Пруфы:</summary>
+      <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
+      <br><em>Никакого ИИ! Пруфы :D</em>
+  </details>
 </div>
 
 - **15-секундное нескипуемое интро** с медленно ползущими буквами.

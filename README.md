@@ -40,9 +40,11 @@ Young past-me was responsible for a few things (feel free to smack past-me on th
 - **All the visuals, too.** Every janky picture and animation was hand-drawn. I don't remember what I used — probably Paint.NET, or something equally simple. What I do remember: the "borrowed" Jokerman font and Ulead COOL 3D. BTW, I hope you "enjoyed" the Help text 😂 I left the image unchanged on purpose (\*cringe\*)
 
 <div align="center">
-  <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
-  <br>
-  <em>Hand-drawn, no AI! Proofs :D</em>
+  <details>
+    <summary>Proofs:</summary>
+      <img src="public/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" width="400">
+      <br><em>Hand-drawn, no AI! Proofs :D</em>
+  </details>
 </div>
 
 - **The 15-second unskippable intro** with the awesomely sliding letters.

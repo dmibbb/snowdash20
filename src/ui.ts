@@ -169,6 +169,7 @@ export function initSiteUI(): void {
     langBtn.addEventListener('click', (e) => {
       e.preventDefault();
       applyLanguage(currentLang === 'en' ? 'ru' : 'en');
+      (e.currentTarget as HTMLButtonElement).blur();
     });
   }
 

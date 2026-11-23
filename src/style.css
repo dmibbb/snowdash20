@@ -32,6 +32,9 @@ canvas#game {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: #2c3e50;
+  border: 1px solid rgba(74, 142, 216, 0.4);
+  border-radius: 4px;
+  box-shadow: 0 0 25px rgba(0, 170, 255, 0.15);
 }
 
 .game-header {
@@ -299,6 +302,11 @@ canvas#game {
 
 .about-port-figure img[src$=".jpg"] {
   max-width: 480px;
+}
+
+.about-port-figure-item {
+  list-style: none;
+  margin-left: -22px;
 }
 
 .about-port-date {
