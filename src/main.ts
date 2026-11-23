@@ -1,5 +1,5 @@
 import './style.css';
-import { initSiteUI } from './ui';
+import { initSiteUI, updateMuteButton } from './ui';
 import { TICK_MS, CANVAS_WIDTH, CANVAS_HEIGHT } from './config';
 import {
   initInput,
@@ -315,6 +315,7 @@ async function main(): Promise<void> {
     while (accumulator >= TICK_MS) {
       if (consumeMute()) {
         audio.toggleMute();
+        updateMuteButton(audio.isMuted);
       }
       machine.tick();
       accumulator -= TICK_MS;

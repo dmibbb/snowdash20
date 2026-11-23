@@ -112,6 +112,19 @@ export function initInput(canvas: HTMLCanvasElement, w = logicalW, h = logicalH)
     btn.addEventListener('pointerleave', clearDir);
     btn.addEventListener('pointercancel', clearDir);
   });
+
+  const actionButtons = document.querySelectorAll('.action-btn');
+  actionButtons.forEach((btn) => {
+    const action = btn.getAttribute('data-action');
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (action === 'pause') pendingPause = true;
+      else if (action === 'restart') pendingRestart = true;
+      else if (action === 'mute') pendingMute = true;
+      else if (action === 'next') pendingNextTrack = true;
+    });
+  });
 }
 
 export function getDirection(): Direction | null {

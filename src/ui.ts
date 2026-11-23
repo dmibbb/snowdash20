@@ -24,7 +24,7 @@ const translations = {
     objectivesTitle: 'Objectives',
     objIntro: 'Oh no! Santa lost all his presents! Help him, Mr. Snejok!',
     objWin: 'To win',
-    objWinDesc: 'Collect every present on the level.',
+    objWinDesc: 'Collect every present in the level.',
     objHelp: 'To help you',
     objHelpDesc1: 'Eat snow to clear your path.',
     objHelpDesc2: 'Push boulders off ledges to crush monsters.',
@@ -135,7 +135,7 @@ const translations = {
     diffLi5: `<b>Частота тиков 60 Гц.</b> Оригинал работал на переменных ~64 fps с кучей Sleep'ов; теперь для логики есть фиксированные 60 Гц и 60 FPS для рендера. Стало реально плавно! 🤯`,
     diffLi6: `<b>Кнопка переключения треков.</b> Вся моя "гениальная" музыка начинает буквально заёбывать уже через пару минут. Чтобы вы не страдали, я урезал громкость вдвое и добавил переключение треков в игре (N) для разнообразия фона.`,
     diffLi7: `<b>Все уровни обновлены</b>, и я прошёл каждый из них по отдельности (но не делал полный прогон игры). Оригиналы нельзя было использовать as is: там последний столбец сетки никогда не заполнялся. Пришлось немного перестраивать и подстраивать уровни.`,
-    diffLi8: `<b>Рандомные начальные направления </b> у врагов. В оригинале монстры всегда стартовали в одном заданном направлении, что оказалось немного неудобно для левел-дизайна.`,
+    diffLi8: `<b>Рандомные начальные направления</b> у врагов. В оригинале монстры всегда стартовали в одном заданном направлении, что оказалось немного неудобно для левел-дизайна.`,
     diffLi9: `<b>Мелкие фиксы багов</b> тут и там — но общий визуальный дизайн и ощущения игры остались как в 2006 году.`,
     thanksTitle: 'Поигрались и хватит',
     thanksP1: `Наконец-то закрыт гештальт по Снежку.<br>Спасибо за игру (если кто-то вообще будет в ЭТО играть)`,
@@ -184,5 +184,12 @@ export function initSiteUI(): void {
       sliderFg.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
       sliderLine.style.left = `${val}%`;
     });
+  }
+}
+
+export function updateMuteButton(isMuted: boolean): void {
+  const muteBtn = document.getElementById('mute-action-btn');
+  if (muteBtn) {
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
   }
 }

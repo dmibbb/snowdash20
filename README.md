@@ -98,7 +98,7 @@ Sincerely,
 
 Oh no! Santa lost all his presents! Help him, **Mr. Snejok**!
 
-- **To win**: Collect every present on the level.
+- **To win**: Collect every present in the level.
 - **To help you**: Eat snow to clear your path. Push boulders off ledges to crush monsters.
 - **Watch out**: Any monster kills you on touch. So does a falling boulder.
 - **Lives**: You start with 4. Each death resets the level (presents return). Lose them all, and it's Game Over.
