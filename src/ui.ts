@@ -1,3 +1,5 @@
+import { version } from '../package.json';
+
 const translations = {
   en: {
     // Headers
@@ -5,7 +7,7 @@ const translations = {
     gameSubtitle: '20th Anniversary Edition',
     aboutTitle: 'About this port',
     releaseDate: 'Released: November 13, 2026',
-    footerText: `Made with <span class="heart">♥</span> by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026`,
+    footerText: `v${version} • Made with <span class="heart">♥</span> by <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Димасик</a> in 2026`,
 
     // Left Panel (Controls)
     controlsTitle: 'Controls',
@@ -76,7 +78,7 @@ const translations = {
     gameSubtitle: '20-е Юбилейное издание',
     aboutTitle: 'Об этой версии',
     releaseDate: 'Издано: 13 ноября 2026',
-    footerText: `Сделал с <span class="heart">♥</span> <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Dim♂ass♂ik</a> в 2026`,
+    footerText: `v${version} • Сделал с <span class="heart">♥</span> <a href="https://github.com/dmibbb" target="_blank" rel="noopener noreferrer">Dim♂ass♂ik</a> в 2026`,
 
     // Left Panel (Controls)
     controlsTitle: 'Управление',

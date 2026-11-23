@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -29,16 +29,16 @@
           <dl>
             <dt data-i18n="navTitle">Navigation</dt>
             <dd data-i18n="navKeys">W A S D / ⬆ ⬅ ⬇ ➡</dd>
-            
+
             <dt data-i18n="pauseTitle">Pause (in-game)</dt>
             <dd data-i18n="pauseKeys">Esc / P</dd>
-            
+
             <dt data-i18n="restartTitle">Restart level (−200PTS)</dt>
             <dd data-i18n="restartKeys">R</dd>
-            
+
             <dt data-i18n="muteTitle">Mute sounds and music</dt>
             <dd data-i18n="muteKeys">M</dd>
-            
+
             <dt data-i18n="nextTrackTitle">Next track (in-game)</dt>
             <dd data-i18n="nextTrackKeys">N</dd>
           </dl>
@@ -58,7 +58,9 @@
         <div class="touch-actions">
           <button class="action-btn" data-action="pause" title="Pause">⏸</button>
           <button class="action-btn" data-action="restart" title="Restart">↻</button>
-          <button class="action-btn" id="mute-action-btn" data-action="mute" title="Mute">🔊</button>
+          <button class="action-btn" id="mute-action-btn" data-action="mute" title="Mute">
+            🔊
+          </button>
           <button class="action-btn" data-action="next" title="Next track">⏭</button>
         </div>
 
@@ -70,15 +72,15 @@
           <dl>
             <dt data-i18n="objWin">To win</dt>
             <dd data-i18n="objWinDesc">Collect every present in the level.</dd>
-            
+
             <dt data-i18n="objHelp">To help you</dt>
             <dd data-i18n="objHelpDesc1">Eat snow to clear your path.</dd>
             <dd data-i18n="objHelpDesc2">Push boulders off ledges to crush monsters.</dd>
-            
+
             <dt data-i18n="objWatch">Watch out</dt>
             <dd data-i18n="objWatchDesc1">Any monster kills you on touch.</dd>
             <dd data-i18n="objWatchDesc2">So does a falling boulder.</dd>
-            
+
             <dt data-i18n="objLives">Lives</dt>
             <dd data-i18n="objLivesDesc1">You start with 4.</dd>
             <dd data-i18n="objLivesDesc2">Each death resets the level (presents return).</dd>
@@ -99,14 +101,14 @@
 
           <h3 data-i18n="hiThere">Hi there!</h3>
           <p class="about-port-lead" data-i18n="introP1"><!-- to be added by TS --></p>
-          
+
           <h3 data-i18n="histTitle">A bit of history</h3>
-          
+
           <h4>2006</h4>
           <p data-i18n="hist2006P1"><!-- to be added by TS --></p>
 
           <figure class="about-port-figure">
-            <img src="/images/2006.png" alt="SnowDash 2006 ♥" loading="lazy">
+            <img src="/images/2006.png" alt="SnowDash 2006 ♥" loading="lazy" />
             <figcaption data-i18n="hist2006Fig0">SnowDash 2006 ♥</figcaption>
           </figure>
 
@@ -117,7 +119,11 @@
             <li data-i18n="hist2006Li3"></li>
             <li class="about-port-figure-item">
               <figure class="about-port-figure">
-                <img src="/images/handdrawn.png" alt="Hand-drawn, no AI! Proofs :D" loading="lazy">
+                <img
+                  src="/images/handdrawn.png"
+                  alt="Hand-drawn, no AI! Proofs :D"
+                  loading="lazy"
+                />
                 <figcaption data-i18n="hist2006Fig1">Hand-drawn, no AI! Proofs :D</figcaption>
               </figure>
             </li>
@@ -129,7 +135,7 @@
           <p data-i18n="hist2008P1"><!-- to be added by TS --></p>
 
           <figure class="about-port-figure">
-            <img src="/images/2008.png" alt="SnowDash 2008. Feel the difference!" loading="lazy">
+            <img src="/images/2008.png" alt="SnowDash 2008. Feel the difference!" loading="lazy" />
             <figcaption data-i18n="hist2008Fig1">SnowDash 2008. Feel the difference!</figcaption>
           </figure>
 
@@ -139,9 +145,23 @@
 
           <h3 data-i18n="diffTitle">What's different in the web version</h3>
           <div class="slider-container">
-            <div class="slider-img slider-bg" style="background-image: url('/images/comp_26.png');"></div>
-            <div class="slider-img slider-fg" id="slider-fg" style="background-image: url('/images/comp_06.png');"></div>
-            <input type="range" min="0" max="100" value="50" class="slider-input" id="slider-input">
+            <div
+              class="slider-img slider-bg"
+              style="background-image: url('/images/comp_26.png')"
+            ></div>
+            <div
+              class="slider-img slider-fg"
+              id="slider-fg"
+              style="background-image: url('/images/comp_06.png')"
+            ></div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value="50"
+              class="slider-input"
+              id="slider-input"
+            />
             <div class="slider-line" id="slider-line"></div>
           </div>
           <div class="slider-caption" data-i18n="sliderCaption"><!-- to be added by TS --></div>

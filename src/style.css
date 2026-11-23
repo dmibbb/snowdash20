@@ -87,11 +87,23 @@ canvas#game {
   color: #a8a8a8;
   letter-spacing: 0.5px;
   user-select: none;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.footer-meta {
+  color: #7a7a7a;
+  font-size: 12px;
 }
 
 @keyframes heart-beat {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.25); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
 }
 
 .site-footer .heart {
@@ -216,7 +228,9 @@ canvas#game {
   text-shadow: 0 0 4px rgba(0, 221, 255, 0.4);
 }
 
-.about-port > summary::-webkit-details-marker { display: none; }
+.about-port > summary::-webkit-details-marker {
+  display: none;
+}
 
 .about-port > summary:hover {
   background: rgba(74, 142, 216, 0.14);
@@ -278,9 +292,18 @@ canvas#game {
   text-shadow: 0 0 4px rgba(0, 221, 255, 0.4);
 }
 
-.rgb-r { color: #ff4444; font-weight: bold; }
-.rgb-g { color: #44ff44; font-weight: bold; }
-.rgb-b { color: #4488ff; font-weight: bold; }
+.rgb-r {
+  color: #ff4444;
+  font-weight: bold;
+}
+.rgb-g {
+  color: #44ff44;
+  font-weight: bold;
+}
+.rgb-b {
+  color: #4488ff;
+  font-weight: bold;
+}
 
 .rgb-team {
   color: #ecf0f1;
@@ -309,12 +332,12 @@ canvas#game {
   color: #7a7a7a;
 }
 
-.about-port-figure img[src$=".png"] {
+.about-port-figure img[src$='.png'] {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
-.about-port-figure img[src$=".jpg"] {
+.about-port-figure img[src$='.jpg'] {
   max-width: 480px;
 }
 
@@ -337,7 +360,7 @@ canvas#game {
 .slider-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 800 / 560; 
+  aspect-ratio: 800 / 560;
   margin: 30px auto;
   border: 1px solid rgba(74, 142, 216, 0.35);
   border-radius: 6px;
@@ -351,7 +374,7 @@ canvas#game {
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: 100% 100%; 
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -419,16 +442,13 @@ canvas#game {
   top: 20px;
   right: 20px;
   z-index: 1000;
-  
   background: rgba(26, 26, 26, 0.8);
   border: 1px solid rgba(74, 142, 216, 0.5);
   color: #4a8ed8;
-  
   font-family: 'Courier New', monospace;
   font-size: 12px;
   font-weight: bold;
   letter-spacing: 1px;
-  
   padding: 8px 12px;
   cursor: pointer;
   border-radius: 4px;
@@ -476,12 +496,10 @@ canvas#game {
     grid-template-columns: 45px 45px 45px;
     grid-template-rows: 45px 45px 45px;
     gap: 6px;
-    
     position: absolute;
     bottom: 50px; /* Keep it just above the HUD (which is 40px tall) */
     left: 15px;
     z-index: 100;
-    
     opacity: 0.6;
     transition: opacity 0.2s ease;
   }
@@ -514,10 +532,22 @@ canvas#game {
   }
 
   /* Grid placement */
-  .dpad-btn.up    { grid-column: 2; grid-row: 1; }
-  .dpad-btn.left  { grid-column: 1; grid-row: 2; }
-  .dpad-btn.right { grid-column: 3; grid-row: 2; }
-  .dpad-btn.down  { grid-column: 2; grid-row: 3; }
+  .dpad-btn.up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .dpad-btn.left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .dpad-btn.right {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .dpad-btn.down {
+    grid-column: 2;
+    grid-row: 3;
+  }
 
   /* Position Action buttons on the right side */
   .touch-actions {
